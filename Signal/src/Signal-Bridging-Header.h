@@ -3,12 +3,15 @@
 //
 #import <Foundation/Foundation.h>
 
+#import "AppAudioManager.h"
+#import "AudioController.h"
 #import "Cryptography.h"
 #import "Environment.h"
 #import "NSData+Base64.h"
 #import "OWSContactAvatarBuilder.h"
 #import "OWSContactsManager.h"
 #import "OWSLogger.h"
+#import "OWSWebRTCDataProtos.pb.h"
 #import "PhoneNumber.h"
 #import "PropertyListPreferences.h"
 #import "PushManager.h"
@@ -19,12 +22,21 @@
 #import <SignalServiceKit/Contact.h>
 #import <SignalServiceKit/NSDate+millisecondTimeStamp.h>
 #import <SignalServiceKit/OWSAcknowledgeMessageDeliveryRequest.h>
+#import <SignalServiceKit/OWSCallAnswerMessage.h>
+#import <SignalServiceKit/OWSCallBusyMessage.h>
+#import <SignalServiceKit/OWSCallHangupMessage.h>
+#import <SignalServiceKit/OWSCallIceUpdateMessage.h>
+#import <SignalServiceKit/OWSCallMessageHandler.h>
+#import <SignalServiceKit/OWSCallOfferMessage.h>
 #import <SignalServiceKit/OWSEndSessionMessage.h>
 #import <SignalServiceKit/OWSError.h>
 #import <SignalServiceKit/OWSGetMessagesRequest.h>
 #import <SignalServiceKit/OWSMessageSender.h>
+#import <SignalServiceKit/OWSOutgoingCallMessage.h>
 #import <SignalServiceKit/OWSSignalService.h>
+#import <SignalServiceKit/OWSTurnServerInfoRequest.h>
 #import <SignalServiceKit/TSAccountManager.h>
+#import <SignalServiceKit/TSCall.h>
 #import <SignalServiceKit/TSContactThread.h>
 #import <SignalServiceKit/TSErrorMessage.h>
 #import <SignalServiceKit/TSInfoMessage.h>

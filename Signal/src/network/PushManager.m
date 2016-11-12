@@ -56,6 +56,7 @@
                      notificationTracker:[NotificationTracker notificationTracker]
                           networkManager:[Environment getCurrent].networkManager
                           storageManager:[TSStorageManager sharedManager]
+                      callMessageHandler:[Environment getCurrent].callMessageHandler
                          contactsUpdater:[Environment getCurrent].contactsUpdater];
 }
 
@@ -63,6 +64,7 @@
                     notificationTracker:(NotificationTracker *)notificationTracker
                          networkManager:(TSNetworkManager *)networkManager
                          storageManager:(TSStorageManager *)storageManager
+                     callMessageHandler:(OWSWebRTCCallMessageHandler *)callMessageHandler
                         contactsUpdater:(ContactsUpdater *)contactsUpdater
 {
     self = [super init];
@@ -79,6 +81,7 @@
 
     TSMessagesManager *messagesManager = [[TSMessagesManager alloc] initWithNetworkManager:networkManager
                                                                             storageManager:storageManager
+                                                                        callMessageHandler:callMessageHandler
                                                                            contactsManager:contactsManager
                                                                            contactsUpdater:contactsUpdater
                                                                              messageSender:_messageSender];
