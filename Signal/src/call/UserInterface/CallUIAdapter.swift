@@ -7,7 +7,8 @@ import CallKit
 
 protocol CallUIAdaptee {
     func startOutgoingCall(_ call: SignalCall)
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) -> Promise<Void>
+    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager)
+    func answerCall(_ call: SignalCall)
     func endCall(_ call: SignalCall)
 }
 
@@ -22,36 +23,26 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
         Logger.error("\(TAG) TODO \(#function)")
     }
 
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) -> Promise<Void> {
-        Logger.error("\(TAG) TODO \(#function)")
-        return Promise { _ in
-            // TODO
-        }
+    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
+        Logger.debug("\(TAG) \(#function)")
+
+        let callNotificationName = CallService.callServiceActiveCallNotificationName()
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+    }
+
+    func answerCall(_ call: SignalCall) {
+        // NO-OP
     }
 
     func endCall(_ call: SignalCall) {
-        Logger.error("\(TAG) TODO \(#function)")
+        // NO-OP
     }
-
-}
-
-// This is duplicating CallKit reasons, but usable from pre iOS10.
-// Are we using this?
-enum OWSCallEndedReason {
-    case failed // An error occurred while trying to service the call
-
-    case remoteEnded // The remote party explicitly ended the call
-
-    case unanswered // The call never started connecting and was never explicitly ended (e.g. outgoing/incoming call timeout)
-
-    case answeredElsewhere // The call was answered on another device
-
-    case declinedElsewhere // The call was declined on another device
 }
 
 @available(iOS 10.0, *)
 class CallUICallKitAdaptee: CallUIAdaptee {
 
+    let TAG = "[CallUICallKitAdaptee]"
     let providerDelegate: ProviderDelegate
     let callManager: SpeakerboxCallManager
 
@@ -61,43 +52,30 @@ class CallUICallKitAdaptee: CallUIAdaptee {
     }
 
     func startOutgoingCall(_ call: SignalCall) {
-        // TODO initiate video call
         providerDelegate.callManager.startCall(handle: call.remotePhoneNumber, video: call.hasVideo)
     }
 
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) -> Promise<Void> {
-        return PromiseKit.wrap {
-            // FIXME weird to pass the audio manager in here.
-            // Crux is, the peerconnectionclient is what controls the audio channel.
-            // But a peerconnectionclient is per call.
-            // While this providerDelegate is an app singleton.
-            providerDelegate.audioManager = audioManager
-            providerDelegate.reportIncomingCall(call, completion: $0)
+    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
+        // FIXME weird to pass the audio manager in here.
+        // Crux is, the peerconnectionclient is what controls the audio channel.
+        // But a peerconnectionclient is per call.
+        // While this providerDelegate is an app singleton.
+        providerDelegate.audioManager = audioManager
+        providerDelegate.reportIncomingCall(call) { error in
+            if error == nil {
+                Logger.debug("\(self.TAG) successfully reported incoming call.")
+            } else {
+                Logger.error("\(self.TAG) providerDelegate.reportIncomingCall failed with error: \(error)")
+            }
         }
     }
 
+    func answerCall(_ call: SignalCall) {
+        let callNotificationName = CallService.callServiceActiveCallNotificationName()
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+    }
+
     func endCall(_ call: SignalCall) {
-
-//        let cxReason = { (reason: OWSCallEndedReason) -> CXCallEndedReason in
-//            switch owsReason {
-//
-//            case .failed:
-//                return CXCallEndedReason.failed
-//
-//            case .remoteEnded:
-//                return CXCallEndedReason.remoteEnded
-//
-//            case .unanswered:
-//                return CXCallEndedReason.unanswered
-//
-//            case .answeredElsewhere:
-//                return CXCallEndedReason.answeredElsewhere
-//
-//            case .declinedElsewhere:
-//                return CXCallEndedReason.declinedElsewhere
-//            }
-//        }(owsReason)
-
         callManager.end(call: call)
     }
 }
@@ -116,16 +94,15 @@ class CallUIAdapter {
     }
 
     func reportIncomingCall(_ call: SignalCall, thread: TSContactThread, audioManager: CallAudioManager) {
-        adaptee.reportIncomingCall(call, audioManager: audioManager).then {
-            Logger.info("\(self.TAG) successfully reported incoming call")
-        }.catch { error in
-            // TODO UI
-            Logger.error("\(self.TAG) reporting incoming call failed with error \(error)")
-        }
+        adaptee.reportIncomingCall(call, audioManager: audioManager)
     }
 
     func startOutgoingCall(_ call: SignalCall, thread: TSContactThread) {
         adaptee.startOutgoingCall(call)
+    }
+
+    func answerCall(_ call: SignalCall) {
+        adaptee.answerCall(call)
     }
 
     func endCall(_ call: SignalCall) {

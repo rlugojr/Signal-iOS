@@ -31,8 +31,14 @@ class CallViewController: UIViewController {
     @IBOutlet weak var contactAvatarView: AvatarImageView!
     @IBOutlet weak var callStatusLabel: UILabel!
 
+    // MARK: In Call Controls
+
+    @IBOutlet weak var callControls: UIView!
     @IBOutlet weak var muteButton: UIButton!
     @IBOutlet weak var speakerPhoneButton: UIButton!
+
+    // MARK: Incoming Call Controls
+    @IBOutlet weak var incomingCallControls: UIView!
 
     // MARK: Initializers
 
@@ -113,30 +119,49 @@ class CallViewController: UIViewController {
         }
     }
 
-    func updateCallStatus(_ newState: CallState) {
-        let textForState = localizedTextForCallState(newState)
+    func updateCallUI(callState: CallState) {
+        let textForState = localizedTextForCallState(callState)
+        Logger.info("\(TAG) new call status: \(callState) aka \"\(textForState)\"")
 
-        Logger.info("\(TAG) new call status: \(newState) aka \"\(textForState)\"")
-        DispatchQueue.main.async {
-            self.callStatusLabel.text = textForState
+        self.callStatusLabel.text = textForState
+
+        // Show Ringer vs. In-Call controls.
+        if callState == .localRinging {
+            callControls.isHidden = true
+            incomingCallControls.isHidden = false
+        } else {
+            callControls.isHidden = false
+            incomingCallControls.isHidden = true
         }
 
-        switch newState {
-            // TODO what do we want to do here? Anythign? Auto dismiss?     
-//        case .remoteHangup, .remoteBusy, .localFailure:
-//            Logger.debug("\(TAG) dismissing after delay because new state is \(newState)")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-//                self.dismiss(animated: true)
-//            }
+        // Dismiss Handling
+        switch callState {
+        case .remoteHangup, .remoteBusy, .localFailure:
+            Logger.debug("\(TAG) dismissing after delay because new state is \(textForState)")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.dismiss(animated: true)
+            }
         case .localHangup:
             Logger.debug("\(TAG) dismissing immediately from local hangup")
             self.dismiss(animated: true)
+
         default: break
         }
     }
 
+    func updateCallStatus(_ newState: CallState) {
+        DispatchQueue.main.async {
+            self.updateCallUI(callState: newState)
+        }
+    }
+
+    // MARK: - Actions
+
+    /**
+     * Ends a connected call. Do not confuse with `didPressDenyCall`.
+     */
     @IBAction func didPressHangup(sender: UIButton) {
-        Logger.debug("\(TAG) called \(#function)")
+        Logger.info("\(TAG) called \(#function)")
         if let call = self.call {
             CallService.signalingQueue.async {
                 self.callService.handleLocalHungupCall(call)
@@ -147,7 +172,7 @@ class CallViewController: UIViewController {
     }
 
     @IBAction func didPressMute(sender muteButton: UIButton) {
-        Logger.debug("\(TAG) called \(#function)")
+        Logger.info("\(TAG) called \(#function)")
         muteButton.isSelected = !muteButton.isSelected
         CallService.signalingQueue.async {
             self.callService.handleToggledMute(isMuted: muteButton.isSelected)
@@ -155,8 +180,41 @@ class CallViewController: UIViewController {
     }
 
     @IBAction func didPressSpeakerphone(sender speakerphoneButton: UIButton) {
-        Logger.debug("\(TAG) called \(#function)")
+        Logger.info("\(TAG) called \(#function)")
         speakerphoneButton.isSelected = !speakerphoneButton.isSelected
         audioManager.toggleSpeakerPhone(isEnabled: speakerphoneButton.isSelected)
+    }
+
+    @IBAction func didPressAnswerCall(sender: UIButton) {
+        Logger.info("\(TAG) called \(#function)")
+
+        guard let call = self.call else {
+            Logger.error("\(TAG) call was unexpectedly nil. Terminating call.")
+            self.callStatusLabel.text = NSLocalizedString("END_CALL_UNCATEGORIZED_FAILURE", comment: "Call setup status label")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.dismiss(animated: true)
+            }
+            return
+        }
+
+        CallService.signalingQueue.async {
+            self.callService.handleAnswerCall(call)
+        }
+    }
+
+    /**
+     * Denies an incoming not-yet-connected call, Do not confuse with `didPressHangup`.
+     */
+    @IBAction func didPressDenyCall(sender: UIButton) {
+        Logger.info("\(TAG) called \(#function)")
+
+        // TODO handle deny separately from hangup?
+        if let call = self.call {
+            CallService.signalingQueue.async {
+                self.callService.handleLocalHungupCall(call)
+            }
+        }
+
+        self.dismiss(animated: true)
     }
 }

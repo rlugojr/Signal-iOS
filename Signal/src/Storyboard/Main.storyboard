@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11542" systemVersion="15G1108" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="tuk-0x-yCb">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11762" systemVersion="15G1212" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="tuk-0x-yCb">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11524"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
@@ -162,7 +162,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="id3-xi-PFz" customClass="AvatarImageView" customModule="Signal" customModuleProvider="target">
-                                        <rect key="frame" x="92" y="139" width="135.5" height="135.5"/>
+                                        <rect key="frame" x="82.5" y="129" width="155.5" height="155.5"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="id3-xi-PFz" secondAttribute="height" multiplier="1:1" id="Tfc-PI-hRy"/>
                                         </constraints>
@@ -182,10 +182,10 @@
                                     <constraint firstItem="id3-xi-PFz" firstAttribute="centerX" secondItem="bgz-d3-b1N" secondAttribute="centerX" id="7it-02-4fC"/>
                                     <constraint firstItem="XWw-3X-PNN" firstAttribute="leading" secondItem="bgz-d3-b1N" secondAttribute="leading" id="EgA-RW-icW"/>
                                     <constraint firstItem="UbL-8Z-oK1" firstAttribute="leading" secondItem="bgz-d3-b1N" secondAttribute="leading" id="G32-rI-2ce"/>
-                                    <constraint firstAttribute="bottom" secondItem="id3-xi-PFz" secondAttribute="bottom" constant="60" id="VnJ-m2-aUj"/>
+                                    <constraint firstAttribute="bottom" secondItem="id3-xi-PFz" secondAttribute="bottom" constant="50" id="VnJ-m2-aUj"/>
                                     <constraint firstAttribute="trailing" secondItem="XWw-3X-PNN" secondAttribute="trailing" id="aDA-Aj-66D"/>
                                     <constraint firstItem="UbL-8Z-oK1" firstAttribute="top" secondItem="bgz-d3-b1N" secondAttribute="top" constant="32" id="pRt-uC-KIw"/>
-                                    <constraint firstItem="id3-xi-PFz" firstAttribute="top" secondItem="XWw-3X-PNN" secondAttribute="bottom" constant="40" id="qVE-XG-OAR"/>
+                                    <constraint firstItem="id3-xi-PFz" firstAttribute="top" secondItem="XWw-3X-PNN" secondAttribute="bottom" constant="30" id="qVE-XG-OAR"/>
                                     <constraint firstAttribute="trailing" secondItem="UbL-8Z-oK1" secondAttribute="trailing" id="xmD-aB-zJj"/>
                                 </constraints>
                             </view>
@@ -277,6 +277,51 @@
                                     <constraint firstItem="HOb-Yz-o3O" firstAttribute="top" secondItem="Dfe-Kk-RoU" secondAttribute="bottom" constant="40" id="uux-HY-Dp1"/>
                                 </constraints>
                             </view>
+                            <view opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="5E5-dq-23I" userLabel="Incoming Call Controls">
+                                <rect key="frame" x="0.0" y="571" width="375" height="96"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qtF-I8-OlZ" userLabel="Bottom Row">
+                                        <rect key="frame" x="0.0" y="0.0" width="375" height="80"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tqx-VV-3f1" userLabel="Hang Up">
+                                                <rect key="frame" x="39.5" y="0.0" width="80" height="80"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="tqx-VV-3f1" secondAttribute="height" multiplier="1:1" id="LSQ-AP-Ojt"/>
+                                                    <constraint firstAttribute="height" constant="80" id="g3g-jD-jeK"/>
+                                                </constraints>
+                                                <state key="normal" image="endcall.png"/>
+                                                <connections>
+                                                    <action selector="didPressDenyCallWithSender:" destination="Tyf-mN-gzf" eventType="touchUpInside" id="Xi0-Ny-oGh"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TUk-K2-YSx" userLabel="Answer">
+                                                <rect key="frame" x="255.5" y="0.0" width="80" height="80"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="80" id="1rO-db-thZ"/>
+                                                    <constraint firstAttribute="width" secondItem="TUk-K2-YSx" secondAttribute="height" multiplier="1:1" id="d6N-G5-flo"/>
+                                                </constraints>
+                                                <state key="normal" image="call.png"/>
+                                                <connections>
+                                                    <action selector="didPressAnswerCallWithSender:" destination="Tyf-mN-gzf" eventType="touchUpInside" id="Nsy-gL-24V"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstItem="TUk-K2-YSx" firstAttribute="centerY" secondItem="qtF-I8-OlZ" secondAttribute="centerY" id="8of-qZ-3g6"/>
+                                            <constraint firstItem="TUk-K2-YSx" firstAttribute="centerX" secondItem="qtF-I8-OlZ" secondAttribute="centerX" constant="108" id="BwS-B7-UFj"/>
+                                            <constraint firstAttribute="height" constant="80" id="a38-ig-Vdx"/>
+                                            <constraint firstItem="tqx-VV-3f1" firstAttribute="centerX" secondItem="qtF-I8-OlZ" secondAttribute="centerX" constant="-108" id="a7f-sa-u5E"/>
+                                            <constraint firstItem="tqx-VV-3f1" firstAttribute="centerY" secondItem="qtF-I8-OlZ" secondAttribute="centerY" id="hEK-8j-k8P"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="qtF-I8-OlZ" firstAttribute="top" secondItem="5E5-dq-23I" secondAttribute="top" id="0rH-Ib-QGg"/>
+                                    <constraint firstAttribute="bottom" secondItem="qtF-I8-OlZ" secondAttribute="bottom" constant="16" id="m7r-9Q-dbe"/>
+                                    <constraint firstItem="qtF-I8-OlZ" firstAttribute="leading" secondItem="5E5-dq-23I" secondAttribute="leading" id="uOS-TT-KF0"/>
+                                    <constraint firstAttribute="trailing" secondItem="qtF-I8-OlZ" secondAttribute="trailing" id="uja-WP-bxH"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="uej-BZ-jAb" secondAttribute="trailing" id="6mk-1V-qHZ"/>
@@ -284,19 +329,24 @@
                             <constraint firstItem="uej-BZ-jAb" firstAttribute="leading" secondItem="fjB-Ns-OQs" secondAttribute="leading" id="ClP-il-Yf3"/>
                             <constraint firstItem="bgz-d3-b1N" firstAttribute="top" secondItem="0w2-kv-AfM" secondAttribute="bottom" id="GIA-x8-Ugw"/>
                             <constraint firstItem="d8M-LU-Hfa" firstAttribute="top" relation="greaterThanOrEqual" secondItem="6aP-bG-6qH" secondAttribute="bottom" id="M1W-xS-Rly"/>
+                            <constraint firstItem="d8M-LU-Hfa" firstAttribute="top" secondItem="5E5-dq-23I" secondAttribute="bottom" id="TX0-VF-EdJ"/>
                             <constraint firstItem="d8M-LU-Hfa" firstAttribute="top" secondItem="uej-BZ-jAb" secondAttribute="bottom" id="UMq-wM-QrB"/>
                             <constraint firstItem="bgz-d3-b1N" firstAttribute="height" secondItem="fjB-Ns-OQs" secondAttribute="height" multiplier="1:2" constant="1" id="YGm-Ij-xfM"/>
                             <constraint firstAttribute="trailing" secondItem="6aP-bG-6qH" secondAttribute="trailing" id="dw7-6I-6ja"/>
+                            <constraint firstItem="5E5-dq-23I" firstAttribute="leading" secondItem="fjB-Ns-OQs" secondAttribute="leading" id="ig5-hm-72O"/>
                             <constraint firstItem="uej-BZ-jAb" firstAttribute="top" secondItem="0w2-kv-AfM" secondAttribute="bottom" constant="-20" id="qV1-mQ-MCP"/>
                             <constraint firstItem="6aP-bG-6qH" firstAttribute="leading" secondItem="fjB-Ns-OQs" secondAttribute="leading" id="rD8-nc-45P"/>
+                            <constraint firstAttribute="trailing" secondItem="5E5-dq-23I" secondAttribute="trailing" id="rTC-1c-nvO"/>
                             <constraint firstAttribute="trailingMargin" secondItem="bgz-d3-b1N" secondAttribute="trailing" constant="12" id="tGv-Vo-kls"/>
                             <constraint firstItem="bgz-d3-b1N" firstAttribute="leading" secondItem="fjB-Ns-OQs" secondAttribute="leadingMargin" constant="12" id="uCE-8S-LvK"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="callControls" destination="6aP-bG-6qH" id="out-ek-gWQ"/>
                         <outlet property="callStatusLabel" destination="XWw-3X-PNN" id="GIf-J0-uGc"/>
                         <outlet property="contactAvatarView" destination="id3-xi-PFz" id="CUV-hJ-Qcp"/>
                         <outlet property="contactNameLabel" destination="UbL-8Z-oK1" id="h9V-l9-JVF"/>
+                        <outlet property="incomingCallControls" destination="5E5-dq-23I" id="fWz-1n-pjI"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="5mi-rT-gg5" userLabel="First Responder" sceneMemberID="firstResponder"/>

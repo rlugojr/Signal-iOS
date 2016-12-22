@@ -131,7 +131,7 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
     }
 
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(presentCallController:)
+                                             selector:@selector(handleActiveCallNotifciation:)
                                                  name:[CallService callServiceActiveCallNotificationName]
                                                object:nil];
 }
@@ -154,7 +154,7 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
     }
 }
 
-- (void)presentCallController:(NSNotification *)notification
+- (void)handleActiveCallNotifciation:(NSNotification *)notification
 {
     if (![notification.object isKindOfClass:[OWSSignalCall class]]) {
         DDLogError(@"%@ expected presentCall observer to be notified with a SignalCall, but found %@",
@@ -163,8 +163,10 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
         return;
     }
 
-    OWSSignalCall *call = (OWSSignalCall *)notification.object;
-    [self performSegueWithIdentifier:SignalsViewControllerSegueShowIncomingCall sender:call];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        OWSSignalCall *call = (OWSSignalCall *)notification.object;
+        [self performSegueWithIdentifier:SignalsViewControllerSegueShowIncomingCall sender:call];
+    });
 }
 
 - (void)previewingContext:(id<UIViewControllerPreviewing>)previewingContext

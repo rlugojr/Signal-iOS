@@ -91,7 +91,9 @@ fileprivate let timeoutSeconds = 60
 
     // MARK: - Class Methods
 
-    // Wrapping this class constant in a method to make it accessible to objc
+    // MARK: Notifications
+
+    // Wrapping these class constants in a method to make it accessible to objc
     class func callServiceActiveCallNotificationName() -> String {
         return  "CallServiceActiveCallNotification"
     }
@@ -426,7 +428,7 @@ fileprivate let timeoutSeconds = 60
         guard call == self.call! else {
             // This could conceivably happen if the other party of an old call was slow to send us their answer
             // and we've subsequently engaged in another call. Don't kill the current call, but just ignore it.
-            Logger.error("\(TAG) ignoring \(#function) for call other than current call")
+            Logger.warn("\(TAG) ignoring \(#function) for call other than current call")
             return
         }
 
@@ -443,8 +445,7 @@ fileprivate let timeoutSeconds = 60
         let callRecord = TSCall(timestamp: NSDate.ows_millisecondTimeStamp(), withCallNumber: call.remotePhoneNumber, callType: RPRecentCallTypeIncoming, in: thread)
         callRecord.save()
 
-        let callNotificationName = type(of: self).callServiceActiveCallNotificationName()
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+        callUIAdapter.answerCall(call)
 
         let message = DataChannelMessage.forConnected(callId: call.signalingId)
         if peerConnectionClient.sendDataChannelMessage(data: message.asData()) {
