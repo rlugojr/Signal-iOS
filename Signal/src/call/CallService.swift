@@ -42,8 +42,9 @@ import WebRTC
  */
 
 enum CallError: Error {
-    case clientError(description: String)
+    case assertionError(description: String)
     case timeout(description: String)
+    case untrustedIdentityKey()
     case externalError(underlyingError: Error)
 }
 
@@ -145,6 +146,8 @@ fileprivate let timeoutSeconds = 60
 
             if let callError = error as? CallError {
                 self.handleFailedCall(error: callError)
+            } else if error.code == OWSErrorCodeUntrustedIdentityKey {
+                self.handleFailedCall(error: CallError.untrustedIdentityKey)
             } else {
                 let externalError = CallError.externalError(underlyingError: error)
                 self.handleFailedCall(error: externalError)
@@ -162,13 +165,13 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description:"call was unexpectedly nil in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"call was unexpectedly nil in \(#function)"))
             return
         }
 
         guard call.signalingId == callId else {
             let description: String = "received answer for call: \(callId) but current call has id: \(call.signalingId)"
-            handleFailedCall(error: .clientError(description: description))
+            handleFailedCall(error: .assertionError(description: description))
             return
         }
 
@@ -183,7 +186,7 @@ fileprivate let timeoutSeconds = 60
         }
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: CallError.clientError(description: "peerConnectionClient was unexpectedly nil in \(#function)"))
+            handleFailedCall(error: CallError.assertionError(description: "peerConnectionClient was unexpectedly nil in \(#function)"))
             return
         }
 
@@ -218,7 +221,7 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description: "call unexpectedly nil in \(#function)"))
+            handleFailedCall(error: .assertionError(description: "call unexpectedly nil in \(#function)"))
             return
         }
 
@@ -300,27 +303,27 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
         Logger.debug("\(TAG) received ice update")
         guard self.thread != nil else {
-            handleFailedCall(error: .clientError(description: "ignoring remote ice update for thread: \(thread) since there is no current thread. \(self.thread)"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread) since there is no current thread. \(self.thread)"))
             return
         }
 
         guard thread.contactIdentifier() == self.thread!.contactIdentifier() else {
-            handleFailedCall(error: .clientError(description: "ignoring remote ice update for thread: \(thread) since the current call is for thread: \(self.thread)"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread) since the current call is for thread: \(self.thread)"))
             return
         }
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description: "ignoring remote ice update for callId: \(callId), since there is no current call."))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for callId: \(callId), since there is no current call."))
             return
         }
 
         guard call.signalingId == callId else {
-            handleFailedCall(error: .clientError(description: "ignoring remote ice update for call: \(callId) since the current call is: \(call.signalingId)"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for call: \(callId) since the current call is: \(call.signalingId)"))
             return
         }
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description: "ignoring remote ice update for thread: \(thread) since the current call hasn't initialized it's peerConnectionClient"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread) since the current call hasn't initialized it's peerConnectionClient"))
             return
         }
 
@@ -331,17 +334,17 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description: "ignoring local ice candidate, since there is no current call."))
+            handleFailedCall(error: .assertionError(description: "ignoring local ice candidate, since there is no current call."))
             return
         }
 
         guard call.state != .idle else {
-            handleFailedCall(error: .clientError(description: "ignoring local ice candidate, since call is now idle."))
+            handleFailedCall(error: .assertionError(description: "ignoring local ice candidate, since call is now idle."))
             return
         }
 
         guard let thread = self.thread else {
-            handleFailedCall(error: .clientError(description: "ignoring local ice candidate, because there was no current TSContactThread."))
+            handleFailedCall(error: .assertionError(description: "ignoring local ice candidate, because there was no current TSContactThread."))
             return
         }
 
@@ -366,17 +369,17 @@ fileprivate let timeoutSeconds = 60
         Logger.debug("\(TAG) in \(#function)")
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) since there is no current call."))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) since there is no current call."))
             return
         }
 
         guard let thread = self.thread else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) since there is no current thread."))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) since there is no current thread."))
             return
         }
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) since there is no current peerConnectionClient."))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) since there is no current peerConnectionClient."))
             return
         }
 
@@ -405,7 +408,7 @@ fileprivate let timeoutSeconds = 60
         }
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description:"\(TAG) call was unexpectedly nil in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) call was unexpectedly nil in \(#function)"))
             return
         }
         call.state = .remoteHangup
@@ -421,7 +424,7 @@ fileprivate let timeoutSeconds = 60
         Logger.debug("\(TAG) in \(#function)")
 
         guard self.call != nil else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) since there is no current call"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) since there is no current call"))
             return
         }
 
@@ -433,12 +436,12 @@ fileprivate let timeoutSeconds = 60
         }
 
         guard let thread = self.thread else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) for call other than current call"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) for call other than current call"))
             return
         }
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description:"\(TAG) missing peerconnection client in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) missing peerconnection client in \(#function)"))
             return
         }
 
@@ -462,7 +465,7 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description:"\(TAG) peerConnectionClient unexpectedly nil in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) peerConnectionClient unexpectedly nil in \(#function)"))
             return
         }
 
@@ -477,22 +480,22 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard self.call != nil else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) since there is no current call"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) since there is no current call"))
             return
         }
 
         guard call == self.call! else {
-            handleFailedCall(error: .clientError(description:"\(TAG) ignoring \(#function) for call other than current call"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) ignoring \(#function) for call other than current call"))
             return
         }
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description:"\(TAG) missing peerconnection client in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) missing peerconnection client in \(#function)"))
             return
         }
 
         guard let thread = self.thread else {
-            handleFailedCall(error: .clientError(description:"\(TAG) missing thread in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) missing thread in \(#function)"))
             return
         }
 
@@ -527,7 +530,7 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let peerConnectionClient = self.peerConnectionClient else {
-            handleFailedCall(error: .clientError(description:"\(TAG) peerConnectionClient unexpectedly nil in \(#function)"))
+            handleFailedCall(error: .assertionError(description:"\(TAG) peerConnectionClient unexpectedly nil in \(#function)"))
             return
         }
         peerConnectionClient.setAudioEnabled(enabled: !isMuted)
@@ -537,7 +540,7 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         guard let call = self.call else {
-            handleFailedCall(error: .clientError(description:"\(TAG) received data message, but there is no current call. Ignoring."))
+            handleFailedCall(error: .assertionError(description:"\(TAG) received data message, but there is no current call. Ignoring."))
             return
         }
 
@@ -547,7 +550,7 @@ fileprivate let timeoutSeconds = 60
             let connected = message.connected!
 
             guard connected.id == call.signalingId else {
-                handleFailedCall(error: .clientError(description:"\(TAG) received connected message for call with id:\(connected.id) but current call has id:\(call.signalingId)"))
+                handleFailedCall(error: .assertionError(description:"\(TAG) received connected message for call with id:\(connected.id) but current call has id:\(call.signalingId)"))
                 return
             }
 
@@ -559,12 +562,12 @@ fileprivate let timeoutSeconds = 60
             let hangup = message.hangup!
 
             guard hangup.id == call.signalingId else {
-                handleFailedCall(error: .clientError(description:"\(TAG) received hangup message for call with id:\(hangup.id) but current call has id:\(call.signalingId)"))
+                handleFailedCall(error: .assertionError(description:"\(TAG) received hangup message for call with id:\(hangup.id) but current call has id:\(call.signalingId)"))
                 return
             }
 
             guard let thread = self.thread else {
-                handleFailedCall(error: .clientError(description:"\(TAG) current contact thread is unexpectedly nil when receiving hangup DataChannelMessage"))
+                handleFailedCall(error: .assertionError(description:"\(TAG) current contact thread is unexpectedly nil when receiving hangup DataChannelMessage"))
                 return
             }
 
@@ -620,6 +623,7 @@ fileprivate let timeoutSeconds = 60
         Logger.error("\(TAG) call failed with error: \(error)")
 
         // It's essential to set call.state before terminateCall, because terminateCall nils self.call
+        call?.error = error
         call?.state = .localFailure
 
         terminateCall()

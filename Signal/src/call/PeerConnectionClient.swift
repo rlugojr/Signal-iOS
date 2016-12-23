@@ -6,17 +6,6 @@ import PromiseKit
 import WebRTC
 
 // TODO move this somewhere else
-struct Platform {
-    static let isSimulator: Bool = {
-        var isSim = false
-        #if arch(i386) || arch(x86_64)
-            isSim = true
-        #endif
-        return isSim
-    }()
-}
-
-// TODO move this somewhere else
 // TODO do we still need this?
 protocol DeviceFinderAdaptee {
     var frontFacingCamera: AVCaptureDevice? { get }

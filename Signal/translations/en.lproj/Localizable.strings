@@ -230,7 +230,7 @@
 "END_CALL_STALE_SESSION" = "Missed the Call.";
 
 /* No comment provided by engineer. */
-"END_CALL_UNCATEGORIZED_FAILURE" = "Client Failed.";
+"END_CALL_UNCATEGORIZED_FAILURE" = "Call Failed.";
 
 /* Generic notice when message failed to send. */
 "ERROR_DESCRIPTION_CLIENT_SENDING_FAILURE" = "Failed to send message.";

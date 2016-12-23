@@ -86,9 +86,16 @@ class CallUIAdapter {
     let adaptee: CallUIAdaptee
 
     init(callService: CallService) {
-        if #available(iOS 10.0, *) {
+        if Platform.isSimulator {
+            // Callkit doesn't seem entirely supported in simulator.
+            // e.g. you can't receive calls in the call screen.
+            Logger.info("\(TAG) choosing non-callkit adaptee for simulator.")
+            adaptee = CallUIiOS8Adaptee()
+        } else if #available(iOS 10.0, *) {
+            Logger.info("\(TAG) choosing callkit adaptee for iOS10+")
             adaptee = CallUICallKitAdaptee(callService: callService)
         } else {
+            Logger.info("\(TAG) choosing non-callkit adaptee for older iOS")
             adaptee = CallUIiOS8Adaptee()
         }
     }

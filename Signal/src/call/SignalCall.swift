@@ -17,8 +17,8 @@ enum CallState: String {
 }
 
 /**
- * Data model representing a WebRTC backed call, signaled through the TextSecure service.
- * This deprecates the existing Redphone call.
+ * Data model for a WebRTC backed voice/video call.
+ * This deprecates Redphone call infrastructure.
  */
 @objc(OWSSignalCall)
 class SignalCall: NSObject {
@@ -36,6 +36,7 @@ class SignalCall: NSObject {
     let remotePhoneNumber: String
     let localId: UUID
     var hasVideo = false
+    var error: CallError?
 
     var stateDidChange: ((_ newState: CallState) -> Void)?
 
@@ -46,7 +47,7 @@ class SignalCall: NSObject {
         self.localId = UUID()
     }
 
-    // MARK: Equatable 
+    // MARK: Equatable
     static func == (lhs: SignalCall, rhs: SignalCall) -> Bool {
         return lhs.localId == rhs.localId
     }
