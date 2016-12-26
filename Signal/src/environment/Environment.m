@@ -22,6 +22,8 @@ static Environment *environment = nil;
 @synthesize accountManager = _accountManager;
 @synthesize callMessageHandler = _callMessageHandler;
 @synthesize callService = _callService;
+@synthesize notificationsManager = _notificationsManager;
+@synthesize preferences = _preferences;
 
 + (Environment *)getCurrent {
     NSAssert((environment != nil), @"Environment is not defined.");
@@ -72,7 +74,6 @@ static Environment *environment = nil;
                 contactsManager:(OWSContactsManager *)contactsManager
                 contactsUpdater:(ContactsUpdater *)contactsUpdater
                  networkManager:(TSNetworkManager *)networkManager
-           notificationsManager:(NotificationsManager *)notificationsManager
                   messageSender:(OWSMessageSender *)messageSender
 {
     ows_require(errorNoter != nil);
@@ -113,7 +114,6 @@ static Environment *environment = nil;
     _contactsManager = contactsManager;
     _contactsUpdater = contactsUpdater;
     _networkManager = networkManager;
-    _notificationsManager = notificationsManager;
     _messageSender = messageSender;
 
     if (recentCallManager != nil) {
@@ -157,8 +157,8 @@ static Environment *environment = nil;
     @synchronized (self) {
         if (!_callService) {
             _callService = [[CallService alloc] initWithAccountManager:self.accountManager
-                                                         messageSender:self.messageSender];
-
+                                                         messageSender:self.messageSender
+                                                  notificationsManager:self.notificationsManager];
         }
     }
 
@@ -203,8 +203,32 @@ static Environment *environment = nil;
                                                untilCancelled:nil];
 }
 
-+ (PropertyListPreferences *)preferences {
-    return [PropertyListPreferences new];
+- (NotificationsManager *)notificationsManager
+{
+    @synchronized (self) {
+        if (!_notificationsManager) {
+            _notificationsManager = [[NotificationsManager alloc] initWithContactsManager:self.contactsManager
+                                                                              preferences:self.preferences];
+        }
+    }
+
+    return _notificationsManager;
+}
+
++ (PropertyListPreferences *)preferences
+{
+    return [Environment getCurrent].preferences;
+}
+
+- (PropertyListPreferences *)preferences
+{
+    @synchronized (self) {
+        if (!_preferences) {
+            _preferences = [PropertyListPreferences new];
+        }
+    }
+
+    return _preferences;
 }
 
 - (void)setSignalsViewController:(SignalsViewController *)signalsViewController {

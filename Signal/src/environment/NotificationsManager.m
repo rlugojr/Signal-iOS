@@ -11,6 +11,7 @@
 #import "OWSContactsManager.h"
 #import "PropertyListPreferences.h"
 #import "PushManager.h"
+#import "Signal-Swift.h"
 #import <AudioToolbox/AudioServices.h>
 #import <SignalServiceKit/TSCall.h>
 #import <SignalServiceKit/TSContactThread.h>
@@ -22,12 +23,14 @@
 
 @property SystemSoundID newMessageSound;
 @property (nonatomic, readonly) OWSContactsManager *contactsManager;
+@property (nonatomic, readonly, strong) id<OWSNotificationsAdaptee> notificationsAdaptee;
 
 @end
 
 @implementation NotificationsManager
 
 - (instancetype)initWithContactsManager:(OWSContactsManager *)contactsManager
+                            preferences:(PropertyListPreferences *)preferences
 {
     self = [super init];
 
@@ -37,12 +40,22 @@
 
     _contactsManager = contactsManager;
 
+    if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){ 10, 0, 0 }]) {
+        _notificationsAdaptee = [OWSUserNotificationsAdaptee new];
+    } else {
+        _notificationsAdaptee =
+            [[OWSLocalNotificationsAdaptee alloc] initWithContactsManager:contactsManager preferences:preferences];
+    }
+
     NSURL *newMessageURL = [[NSBundle mainBundle] URLForResource:@"NewMessage" withExtension:@"aifc"];
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)newMessageURL, &_newMessageSound);
 
     return self;
 }
 
+/**
+ * Notify user for deprecated Redphone Call
+ */
 - (void)notifyUserForCall:(TSCall *)call inThread:(TSThread *)thread {
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
         // Remove previous notification of call and show missed notification.
@@ -69,6 +82,33 @@
         }
     }
 }
+
+/**
+ * Notify user for incoming WebRTC Call
+ */
+
+- (void)incomingCallFromSignalId:(NSString *)signalId
+{
+    if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
+        DDLogDebug(@"%@ Ignoring %s since app is in foreground", self.tag, __PRETTY_FUNCTION__);
+        return;
+    }
+
+    [self.notificationsAdaptee incomingCallFromSignalId:signalId];
+}
+
+/**
+ * Notify user for missed WebRTC Call
+ */
+//- (void)missedCallFromSignalId:(OWSSignalId *)signalId
+//{
+//    if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
+//        DDLogDebug(@"%@ Ignoring %s since app is in foreground", self.tag, __PRETTY_FUNCTION__);
+//        return;
+//    }
+//
+//    [self.notificationsAdaptee missedCallFromSignalId:signalid];
+//}
 
 - (void)notifyUserForErrorMessage:(TSErrorMessage *)message inThread:(TSThread *)thread {
     NSString *messageDescription = message.description;
@@ -150,6 +190,18 @@
             AudioServicesPlayAlertSound(_newMessageSound);
         }
     }
+}
+
+#pragma mark - Logging
+
++ (NSString *)tag
+{
+    return [NSString stringWithFormat:@"[%@]", self.class];
+}
+
+- (NSString *)tag
+{
+    return self.class.tag;
 }
 
 @end

@@ -8,6 +8,7 @@
 #import "Cryptography.h"
 #import "Environment.h"
 #import "NSData+Base64.h"
+#import "NotificationsManager.h"
 #import "OWSContactAvatarBuilder.h"
 #import "OWSContactsManager.h"
 #import "OWSLogger.h"
@@ -35,6 +36,7 @@
 #import <SignalServiceKit/OWSOutgoingCallMessage.h>
 #import <SignalServiceKit/OWSSignalService.h>
 #import <SignalServiceKit/OWSTurnServerInfoRequest.h>
+#import <SignalServiceKit/SignalRecipient.h>
 #import <SignalServiceKit/TSAccountManager.h>
 #import <SignalServiceKit/TSCall.h>
 #import <SignalServiceKit/TSContactThread.h>

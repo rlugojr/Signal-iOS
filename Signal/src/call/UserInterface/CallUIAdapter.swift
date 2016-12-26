@@ -19,6 +19,12 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
 
     let TAG = "[CallUIiOS8Adaptee]"
 
+    let notificationsManager: NotificationsManager
+
+    required init(notificationsManager: NotificationsManager) {
+        self.notificationsManager = notificationsManager
+    }
+
     func startOutgoingCall(_ call: SignalCall) {
         Logger.error("\(TAG) TODO \(#function)")
     }
@@ -26,8 +32,12 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
     func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
         Logger.debug("\(TAG) \(#function)")
 
-        let callNotificationName = CallService.callServiceActiveCallNotificationName()
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+        if UIApplication.shared.applicationState == .active {
+            let callNotificationName = CallService.callServiceActiveCallNotificationName()
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+        } else {
+            notificationsManager.incomingCall(fromSignalId: call.remotePhoneNumber)
+        }
     }
 
     func answerCall(_ call: SignalCall) {
@@ -85,18 +95,18 @@ class CallUIAdapter {
     let TAG = "[CallUIAdapter]"
     let adaptee: CallUIAdaptee
 
-    init(callService: CallService) {
+    init(notificationsManager: NotificationsManager, callService: CallService) {
         if Platform.isSimulator {
             // Callkit doesn't seem entirely supported in simulator.
             // e.g. you can't receive calls in the call screen.
             Logger.info("\(TAG) choosing non-callkit adaptee for simulator.")
-            adaptee = CallUIiOS8Adaptee()
+            adaptee = CallUIiOS8Adaptee(notificationsManager: notificationsManager)
         } else if #available(iOS 10.0, *) {
             Logger.info("\(TAG) choosing callkit adaptee for iOS10+")
             adaptee = CallUICallKitAdaptee(callService: callService)
         } else {
             Logger.info("\(TAG) choosing non-callkit adaptee for older iOS")
-            adaptee = CallUIiOS8Adaptee()
+            adaptee = CallUIiOS8Adaptee(notificationsManager: notificationsManager)
         }
     }
 

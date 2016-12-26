@@ -44,7 +44,6 @@ import WebRTC
 enum CallError: Error {
     case assertionError(description: String)
     case timeout(description: String)
-    case untrustedIdentityKey()
     case externalError(underlyingError: Error)
 }
 
@@ -83,11 +82,11 @@ fileprivate let timeoutSeconds = 60
     // Used to coordinate promises across delegate methods
     var fulfillCallConnectedPromise: (()->())?
 
-    required init(accountManager: AccountManager, messageSender: MessageSender) {
+    required init(accountManager: AccountManager, messageSender: MessageSender, notificationsManager: NotificationsManager) {
         self.accountManager = accountManager
         self.messageSender = messageSender
         super.init()
-        self.callUIAdapter = CallUIAdapter(callService: self)
+        self.callUIAdapter = CallUIAdapter(notificationsManager: notificationsManager, callService: self)
     }
 
     // MARK: - Class Methods
@@ -146,8 +145,6 @@ fileprivate let timeoutSeconds = 60
 
             if let callError = error as? CallError {
                 self.handleFailedCall(error: callError)
-            } else if error.code == OWSErrorCodeUntrustedIdentityKey {
-                self.handleFailedCall(error: CallError.untrustedIdentityKey)
             } else {
                 let externalError = CallError.externalError(underlyingError: error)
                 self.handleFailedCall(error: externalError)

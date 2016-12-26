@@ -17,6 +17,7 @@
 		4509E79A1DD653700025A59F /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4509E7991DD653700025A59F /* WebRTC.framework */; };
 		4509E79C1DD6545B0025A59F /* CallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4509E79B1DD6545B0025A59F /* CallViewController.swift */; };
 		450DF2051E0D74AC003D14BE /* Platform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450DF2041E0D74AC003D14BE /* Platform.swift */; };
+		450DF2091E0DD2C6003D14BE /* NotificationsAdaptee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450DF2081E0DD2C6003D14BE /* NotificationsAdaptee.swift */; };
 		4516E3FF1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 4516E3FE1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m */; };
 		451764271DE939F300EDB8B9 /* ContactsPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451764261DE939F300EDB8B9 /* ContactsPicker.swift */; };
 		4517642A1DE939FD00EDB8B9 /* ContactCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 451764281DE939FD00EDB8B9 /* ContactCell.xib */; };
@@ -605,6 +606,7 @@
 		4509E7991DD653700025A59F /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = Carthage/Build/iOS/WebRTC.framework; sourceTree = "<group>"; };
 		4509E79B1DD6545B0025A59F /* CallViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallViewController.swift; sourceTree = "<group>"; };
 		450DF2041E0D74AC003D14BE /* Platform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Platform.swift; sourceTree = "<group>"; };
+		450DF2081E0DD2C6003D14BE /* NotificationsAdaptee.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NotificationsAdaptee.swift; path = UserInterface/Notifications/NotificationsAdaptee.swift; sourceTree = "<group>"; };
 		4516E3FD1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OWS101ExistingUsersBlockOnIdentityChange.h; path = Migrations/OWS101ExistingUsersBlockOnIdentityChange.h; sourceTree = "<group>"; };
 		4516E3FE1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OWS101ExistingUsersBlockOnIdentityChange.m; path = Migrations/OWS101ExistingUsersBlockOnIdentityChange.m; sourceTree = "<group>"; };
 		451764261DE939F300EDB8B9 /* ContactsPicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsPicker.swift; sourceTree = "<group>"; };
@@ -1297,6 +1299,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		450DF2061E0DD28D003D14BE /* UserInterface */ = {
+			isa = PBXGroup;
+			children = (
+				450DF2071E0DD29E003D14BE /* Notifications */,
+				76EB052B18170B33006006FC /* Views */,
+				76EB04FE18170B33006006FC /* View Controllers */,
+			);
+			name = UserInterface;
+			sourceTree = "<group>";
+		};
+		450DF2071E0DD29E003D14BE /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				450DF2081E0DD2C6003D14BE /* NotificationsAdaptee.swift */,
+			);
+			name = Notifications;
+			sourceTree = "<group>";
+		};
 		45464DB81DFA03D8001D3FD6 /* Signaling */ = {
 			isa = PBXGroup;
 			children = (
@@ -1484,8 +1504,7 @@
 				76EB04C818170B33006006FC /* util */,
 				45D231751DC7E8C50034FA89 /* Jobs */,
 				457F3AC01D14A0F700C51351 /* Models */,
-				76EB052B18170B33006006FC /* Views */,
-				76EB04FE18170B33006006FC /* View Controllers */,
+				450DF2061E0DD28D003D14BE /* UserInterface */,
 				45BFFFA51D898AB8004A12A7 /* Observers */,
 				45B201741DAECBFD00C461E0 /* Signal-Bridging-Header.h */,
 			);
@@ -3019,6 +3038,7 @@
 				B6DA6B071B8A2F9A00CA6F98 /* AppStoreRating.m in Sources */,
 				458E38311D6682450094BD24 /* OWSQRCodeScanningViewController.m in Sources */,
 				76EB062418170B33006006FC /* PriorityQueue.m in Sources */,
+				450DF2091E0DD2C6003D14BE /* NotificationsAdaptee.swift in Sources */,
 				B6BADBE71B88D1AC0086A80D /* LockInteractionController.m in Sources */,
 				76EB061A18170B33006006FC /* DiscardingLog.m in Sources */,
 				45CD81F21DC03A22004C9430 /* OWSLogger.m in Sources */,

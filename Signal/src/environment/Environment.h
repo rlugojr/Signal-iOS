@@ -57,7 +57,6 @@ static NSString *const kRedphoneCallSegue = @"2.0_6.0_Call_Segue";
                 contactsManager:(OWSContactsManager *)contactsManager
                 contactsUpdater:(ContactsUpdater *)contactsUpdater
                  networkManager:(TSNetworkManager *)networkManager
-           notificationsManager:(NotificationsManager *)notificationsManager
                   messageSender:(OWSMessageSender *)messageSender;
 
 @property (nonatomic, readonly) in_port_t serverPort;
@@ -81,6 +80,8 @@ static NSString *const kRedphoneCallSegue = @"2.0_6.0_Call_Segue";
 @property (nonatomic, readonly) TSNetworkManager *networkManager;
 @property (nonatomic, readonly) NotificationsManager *notificationsManager;
 @property (nonatomic, readonly) OWSMessageSender *messageSender;
+@property (nonatomic, readonly) PropertyListPreferences *preferences;
+
 
 @property (nonatomic, readonly) SignalsViewController *signalsViewController;
 @property (nonatomic, readonly, weak) UINavigationController *signUpFlowNavigationController;
