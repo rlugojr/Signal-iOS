@@ -32,10 +32,11 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
     func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
         Logger.debug("\(TAG) \(#function)")
 
-        if UIApplication.shared.applicationState == .active {
-            let callNotificationName = CallService.callServiceActiveCallNotificationName()
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
-        } else {
+        // present Call View controller
+        let callNotificationName = CallService.callServiceActiveCallNotificationName()
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+    
+        if UIApplication.shared.applicationState != .active {
             notificationsManager.incomingCall(fromSignalId: call.remotePhoneNumber)
         }
     }

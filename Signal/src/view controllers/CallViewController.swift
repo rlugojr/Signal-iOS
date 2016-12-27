@@ -5,6 +5,27 @@ import Foundation
 import WebRTC
 import PromiseKit
 
+@objc(OWSCallRinger)
+class CallRinger: NSObject {
+
+    let vibrateRepeatDuration = 1.6
+    var vibrateTimer: Timer?
+
+    public func start() {
+        vibrateTimer = Timer.scheduledTimer(timeInterval: vibrateRepeatDuration, target: self, selector: #selector(vibrate), userInfo: nil, repeats: true)
+        vibrateTimer!.fire()
+    }
+
+    public func stop() {
+        vibrateTimer?.invalidate()
+        vibrateTimer = nil
+    }
+
+    public func vibrate() {
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+    }
+}
+
 @objc(OWSCallViewController)
 class CallViewController: UIViewController {
 
@@ -21,11 +42,12 @@ class CallViewController: UIViewController {
     let audioManager: AppAudioManager
 
     // MARK: Properties
-    
+
     var peerConnectionClient: PeerConnectionClient?
     var callDirection: CallDirection = .unspecified
     var thread: TSContactThread!
     var call: SignalCall!
+    let callRinger = CallRinger()
 
     @IBOutlet weak var contactNameLabel: UILabel!
     @IBOutlet weak var contactAvatarView: AvatarImageView!
@@ -127,9 +149,11 @@ class CallViewController: UIViewController {
 
         // Show Ringer vs. In-Call controls.
         if callState == .localRinging {
+            callRinger.start()
             callControls.isHidden = true
             incomingCallControls.isHidden = false
         } else {
+            callRinger.stop()
             callControls.isHidden = false
             incomingCallControls.isHidden = true
         }
