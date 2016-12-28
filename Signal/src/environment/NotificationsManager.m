@@ -22,6 +22,7 @@
 @interface NotificationsManager ()
 
 @property SystemSoundID newMessageSound;
+@property NSMutableDictionary<NSString *, UILocalNotification *> *currentNotifications;
 
 @end
 
@@ -30,10 +31,11 @@
 - (instancetype)init
 {
     self = [super init];
-
     if (!self) {
         return self;
     }
+
+    _currentNotifications = [NSMutableDictionary new];
 
     NSURL *newMessageURL = [[NSBundle mainBundle] URLForResource:@"NewMessage" withExtension:@"aifc"];
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)newMessageURL, &_newMessageSound);
@@ -69,7 +71,7 @@
                     [NSString stringWithFormat:NSLocalizedString(@"MSGVIEW_MISSED_CALL", nil), [thread name]];
             }
 
-            [self presentNotification:notification];
+            [[PushManager sharedManager] presentNotification:notification];
         }
     }
 }
@@ -86,39 +88,54 @@
     UILocalNotification *notification = [UILocalNotification new];
     notification.category = PushManagerCategoriesIncomingCall;
     notification.soundName = @"r.caf";
-    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : call.localId.UUIDString };
+    NSString *localCallId = call.localId.UUIDString;
+    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : localCallId };
 
     PropertyListPreferences *prefs = [Environment getCurrent].preferences;
     NSString *alertMessage;
     switch ([prefs notificationPreviewType]) {
         case NotificationNoNameNoPreview: {
-            alertMessage = NSLocalizedString(@"INCOMING_CALL", nil);
+            alertMessage = NSLocalizedString(@"INCOMING_CALL", @"notification body");
             break;
         }
         case NotificationNameNoPreview:
         case NotificationNamePreview: {
-            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"INCOMING_CALL_FROM", nil), callerName];
+            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"INCOMING_CALL_FROM", @"notification body"), callerName];
             break;
         }
     }
     notification.alertBody = [NSString stringWithFormat:@"☎️ %@", alertMessage];
 
-    [self presentNotification:notification];
+    [self presentNotification:notification identifier:localCallId];
 }
 
 /**
  * Notify user for missed WebRTC Call
  */
-//- (void)missedCallFromSignalId:(OWSSignalId *)signalId
-//{
-//    if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
-//        DDLogDebug(@"%@ Ignoring %s since app is in foreground", self.tag, __PRETTY_FUNCTION__);
-//        return;
-//    }
-//
-//    [self.notificationsAdaptee missedCallFromSignalId:signalid];
-//}
+- (void)presentMissedCall:(SignalCall *)call callerName:(NSString *)callerName
+{
+    UILocalNotification *notification = [UILocalNotification new];
+    notification.category = PushManagerCategoriesMissedCall;
+    NSString *localCallId = call.localId.UUIDString;
+    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : localCallId };
 
+    PropertyListPreferences *prefs = [Environment getCurrent].preferences;
+    NSString *alertMessage;
+    switch ([prefs notificationPreviewType]) {
+        case NotificationNoNameNoPreview: {
+            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"MISSED_CALL", @"notification body")];
+            break;
+        }
+        case NotificationNameNoPreview:
+        case NotificationNamePreview: {
+            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"MSGVIEW_MISSED_CALL", @"notification body"), callerName];
+            break;
+        }
+    }
+    notification.alertBody = [NSString stringWithFormat:@"☎️ %@", alertMessage];
+
+    [self presentNotification:notification identifier:localCallId   ];
+}
 
 #pragma mark - Signal Messages
 
@@ -144,7 +161,7 @@
         }
         notification.alertBody = alertBodyString;
 
-        [self presentNotification:notification];
+        [[PushManager sharedManager] presentNotification:notification];
     } else {
         if ([Environment.preferences soundInForeground]) {
             AudioServicesPlayAlertSound(_newMessageSound);
@@ -200,7 +217,7 @@
                 break;
         }
 
-        [self presentNotification:notification];
+        [[PushManager sharedManager] presentNotification:notification];
     } else {
         if ([Environment.preferences soundInForeground]) {
             AudioServicesPlayAlertSound(_newMessageSound);
@@ -210,9 +227,30 @@
 
 #pragma mark - Util
 
-- (void)presentNotification:(UILocalNotification *)notification
+- (void)presentNotification:(UILocalNotification *)notification identifier:(NSString *)identifier
 {
-    [[PushManager sharedManager] presentNotification:notification];
+    // Replace any existing notification
+    // e.g. when an "Incoming Call" notification gets replaced with a "Missed Call" notification.
+    if (self.currentNotifications[identifier]) {
+        [self cancelNotificationWithIdentifier:identifier];
+    }
+
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    DDLogDebug(@"%@ presenting notification with identifier: %@", self.tag, identifier);
+
+    self.currentNotifications[identifier] = notification;
+}
+
+- (void)cancelNotificationWithIdentifier:(NSString *)identifier
+{
+    UILocalNotification *notification = self.currentNotifications[identifier];
+    if (!notification) {
+        DDLogWarn(@"%@ Couldn't cancel notification because none was found with identifier: %@", self.tag, identifier);
+        return;
+    }
+    [self.currentNotifications removeObjectForKey:identifier];
+
+    [[UIApplication sharedApplication] cancelLocalNotification:notification];
 }
 
 #pragma mark - Logging

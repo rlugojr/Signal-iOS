@@ -18,7 +18,12 @@ class CallNotificationsAdapter: NSObject {
     }
 
     func presentIncomingCall(_ call: SignalCall, callerName: String) {
-        Logger.debug("\(TAG) called \(#function)")
+        Logger.debug("\(TAG) in \(#function)")
         adaptee.presentIncomingCall(call, callerName: callerName)
+    }
+
+    func presentMissedCall(_ call: SignalCall, callerName: String) {
+        Logger.debug("\(TAG) in \(#function)")
+        adaptee.presentMissedCall(call, callerName: callerName)
     }
 }

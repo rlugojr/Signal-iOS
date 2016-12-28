@@ -5,7 +5,8 @@ import Foundation
 import UserNotifications
 
 enum NotificationsAdapterCategory: String {
-    case incomingCall, missed
+    case incomingCall = "org.whispersystems.signal.NotificationsAdapterCategory.incomingCall",
+         missedCall = "org.whispersystems.signal.NotificationsAdapterCategory.missedCall"
 }
 
 enum NotificationsAdapterCallActions: String {
@@ -16,7 +17,6 @@ let kNotificationsAdapterCallCategory = "NotificationsAdapterCallCategory"
 
 @available(iOS 10.0, *)
 class UserNotificationsAdaptee: NSObject, OWSCallNotificationsAdaptee {
-
     let TAG = "[UserNotificationsAdaptee]"
 
     private let center = UNUserNotificationCenter.current()
@@ -25,15 +25,16 @@ class UserNotificationsAdaptee: NSObject, OWSCallNotificationsAdaptee {
         Logger.debug("\(TAG) \(#function) is no-op, because it's handled with callkit.")
     }
 
-    func missedCall(_ call: SignalCall) {
+    public func presentMissedCall(_ call: SignalCall!, callerName: String!) {
         Logger.debug("\(TAG) \(#function)")
 
         let content = UNMutableNotificationContent()
         content.title = NSString.localizedUserNotificationString(forKey: "Missed Call", arguments: nil)
         content.body = NSString.localizedUserNotificationString(forKey: "from some body.", arguments: nil)
         content.sound = UNNotificationSound.default()
-        content.categoryIdentifier = "org.whispersystems.signal.missedCall"
-        let request = UNNotificationRequest.init(identifier: "FiveSecond", content: content, trigger: nil)
+        content.categoryIdentifier = NotificationsAdapterCategory.missedCall.rawValue
+
+        let request = UNNotificationRequest.init(identifier: call.localId.uuidString, content: content, trigger: nil)
 
         center.add(request)
     }

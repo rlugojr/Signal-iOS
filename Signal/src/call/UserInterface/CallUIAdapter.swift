@@ -8,6 +8,7 @@ import CallKit
 protocol CallUIAdaptee {
     func startOutgoingCall(_ call: SignalCall)
     func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager)
+    func reportMissedCall(_ call: SignalCall, callerName: String)
     func answerCall(_ call: SignalCall)
     func endCall(_ call: SignalCall)
 }
@@ -25,11 +26,11 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
         self.notificationsAdapter = notificationsAdapter
     }
 
-    func startOutgoingCall(_ call: SignalCall) {
+    public func startOutgoingCall(_ call: SignalCall) {
         Logger.debug("\(TAG) \(#function) is no-op")
     }
 
-    func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
+    public func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
         Logger.debug("\(TAG) \(#function)")
 
         // present Call View controller
@@ -44,11 +45,15 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
         }
     }
 
-    func answerCall(_ call: SignalCall) {
+    public func reportMissedCall(_ call: SignalCall, callerName: String) {
+        notificationsAdapter.presentMissedCall(call, callerName: callerName)
+    }
+
+    public func answerCall(_ call: SignalCall) {
         // NO-OP
     }
 
-    func endCall(_ call: SignalCall) {
+    public func endCall(_ call: SignalCall) {
         // NO-OP
     }
 }
@@ -59,10 +64,12 @@ class CallUICallKitAdaptee: CallUIAdaptee {
     let TAG = "[CallUICallKitAdaptee]"
     let providerDelegate: ProviderDelegate
     let callManager: SpeakerboxCallManager
+    let notificationsAdapter: CallNotificationsAdapter
 
-    init(callService: CallService) {
-        callManager = SpeakerboxCallManager()
-        providerDelegate = ProviderDelegate(callManager: callManager, callService: callService)
+    init(callService: CallService, notificationsAdapter: CallNotificationsAdapter) {
+        self.callManager = SpeakerboxCallManager()
+        self.providerDelegate = ProviderDelegate(callManager: callManager, callService: callService)
+        self.notificationsAdapter = notificationsAdapter
     }
 
     func startOutgoingCall(_ call: SignalCall) {
@@ -82,6 +89,10 @@ class CallUICallKitAdaptee: CallUIAdaptee {
                 Logger.error("\(self.TAG) providerDelegate.reportIncomingCall failed with error: \(error)")
             }
         }
+    }
+
+    public func reportMissedCall(_ call: SignalCall, callerName: String) {
+        notificationsAdapter.presentMissedCall(call, callerName: callerName)
     }
 
     func answerCall(_ call: SignalCall) {
@@ -109,7 +120,7 @@ class CallUIAdapter {
             adaptee = CallUIiOS8Adaptee(notificationsAdapter: notificationsAdapter)
         } else if #available(iOS 10.0, *) {
             Logger.info("\(TAG) choosing callkit adaptee for iOS10+")
-            adaptee = CallUICallKitAdaptee(callService: callService)
+            adaptee = CallUICallKitAdaptee(callService: callService, notificationsAdapter: notificationsAdapter)
         } else {
             Logger.info("\(TAG) choosing non-callkit adaptee for older iOS")
             adaptee = CallUIiOS8Adaptee(notificationsAdapter: notificationsAdapter)
@@ -119,6 +130,11 @@ class CallUIAdapter {
     func reportIncomingCall(_ call: SignalCall, thread: TSContactThread, audioManager: CallAudioManager) {
         let callerName = self.contactsManager.displayName(forPhoneIdentifier: call.remotePhoneNumber)
         adaptee.reportIncomingCall(call, callerName: callerName, audioManager: audioManager)
+    }
+
+    func reportMissedCall(_ call: SignalCall) {
+        let callerName = self.contactsManager.displayName(forPhoneIdentifier: call.remotePhoneNumber)
+        adaptee.reportMissedCall(call, callerName: callerName)
     }
 
     func startOutgoingCall(_ call: SignalCall, thread: TSContactThread) {

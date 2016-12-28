@@ -5,7 +5,8 @@
 
 @protocol OWSCallNotificationsAdaptee <NSObject>
 
-- (void)presentIncomingCall:(SignalCall *)call
-                 callerName:(NSString *)callerName NS_SWIFT_NAME(presentIncomingCall(_:callerName:));
+- (void)presentIncomingCall:(SignalCall *)call callerName:(NSString *)callerName;
+
+- (void)presentMissedCall:(SignalCall *)call callerName:(NSString *)callerName;
 
 @end

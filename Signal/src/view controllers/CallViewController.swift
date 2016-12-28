@@ -9,11 +9,17 @@ import PromiseKit
 class CallRinger: NSObject {
 
     let vibrateRepeatDuration = 1.6
+
+    // Our ring buzz is a double vibrate. 
+    // Set the small time between the individual vibrations.
+    let pulseDuration = 0.2
+
     var vibrateTimer: Timer?
 
     public func start() {
         vibrateTimer = Timer.scheduledTimer(timeInterval: vibrateRepeatDuration, target: self, selector: #selector(vibrate), userInfo: nil, repeats: true)
-        vibrateTimer!.fire()
+
+        //TODO play audio.
     }
 
     public func stop() {
@@ -23,6 +29,9 @@ class CallRinger: NSObject {
 
     public func vibrate() {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        DispatchQueue.default.asyncAfter(deadline: DispatchTime.now() + pulseDuration) {
+            AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        }
     }
 }
 

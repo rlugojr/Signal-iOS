@@ -203,17 +203,26 @@ fileprivate let timeoutSeconds = 60
         }
     }
 
-    private func handleLocalBusyCall(thread: TSContactThread, callId: UInt64) {
-        Logger.debug("\(TAG) \(#function) for call: \(callId) thread: \(thread)")
+    private func handleLocalBusyCall(_ call: SignalCall, thread: TSContactThread) {
+        Logger.debug("\(TAG) \(#function) for call: \(call) thread: \(thread)")
         assertOnSignalingQueue()
 
-        let busyMessage = OWSCallBusyMessage(callId: callId)
+        let busyMessage = OWSCallBusyMessage(callId: call.signalingId)
         let callMessage = OWSOutgoingCallMessage(thread: thread, busyMessage: busyMessage)
         _ = sendMessage(callMessage)
 
+        handleMissedCall(call, thread: thread)
+    }
+
+    public func handleMissedCall(_ call: SignalCall, thread: TSContactThread) {
         // Insert missed call record
-        let callRecord = TSCall(timestamp: NSDate.ows_millisecondTimeStamp(), withCallNumber: thread.contactIdentifier(), callType: RPRecentCallTypeMissed, in: thread)
+        let callRecord = TSCall(timestamp: NSDate.ows_millisecondTimeStamp(),
+                                withCallNumber: thread.contactIdentifier(),
+                                callType: RPRecentCallTypeMissed,
+                                in: thread)
         callRecord.save()
+
+        self.callUIAdapter.reportMissedCall(call)
     }
 
     public func handleRemoteBusy(thread: TSContactThread) {
@@ -242,17 +251,17 @@ fileprivate let timeoutSeconds = 60
         assertOnSignalingQueue()
 
         Logger.verbose("\(TAG) receivedCallOffer for thread:\(thread)")
+        let newCall = SignalCall(signalingId: callId, state: .answering, remotePhoneNumber: thread.contactIdentifier())
 
         guard call == nil else {
             // TODO on iOS10+ we can use CallKit to swap calls rather than just returning busy immediately.
             Logger.verbose("\(TAG) receivedCallOffer for thread: \(thread) but we're already in call: \(call)")
 
-            handleLocalBusyCall(thread: thread, callId: callId)
+            handleLocalBusyCall(newCall, thread: thread)
             return
         }
 
         self.thread = thread
-        let newCall = SignalCall(signalingId: callId, state: .answering, remotePhoneNumber: thread.contactIdentifier())
         call = newCall
 
         let backgroundTask = UIApplication.shared.beginBackgroundTask {
@@ -422,6 +431,14 @@ fileprivate let timeoutSeconds = 60
             handleFailedCall(error: .assertionError(description:"\(TAG) call was unexpectedly nil in \(#function)"))
             return
         }
+
+        switch call.state {
+        case .idle, .dialing, .answering, .localRinging, .localFailure, .remoteBusy, .remoteRinging:
+            handleMissedCall(call, thread: thread)
+        case .connected, .localHangup, .remoteHangup:
+            Logger.info("\(TAG) call is finished.")
+        }
+
         call.state = .remoteHangup
         callUIAdapter.endCall(call)
 
