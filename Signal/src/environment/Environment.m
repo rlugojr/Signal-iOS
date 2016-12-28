@@ -143,9 +143,8 @@ static Environment *environment = nil;
     @synchronized (self) {
         if (!_callMessageHandler) {
             _callMessageHandler = [[OWSWebRTCCallMessageHandler alloc] initWithAccountManager:self.accountManager
-                                                                              contactsManager:self.contactsManager
-                                                                                messageSender:self.messageSender
-                                                                                  callService:self.callService];
+                                                                                  callService:self.callService
+                                                                                messageSender:self.messageSender];
         }
     }
 
@@ -157,8 +156,9 @@ static Environment *environment = nil;
     @synchronized (self) {
         if (!_callService) {
             _callService = [[CallService alloc] initWithAccountManager:self.accountManager
+                                                       contactsManager:self.contactsManager
                                                          messageSender:self.messageSender
-                                                  notificationsManager:self.notificationsManager];
+                                                  notificationsAdapter:[OWSCallNotificationsAdapter new]];
         }
     }
 
@@ -207,8 +207,7 @@ static Environment *environment = nil;
 {
     @synchronized (self) {
         if (!_notificationsManager) {
-            _notificationsManager = [[NotificationsManager alloc] initWithContactsManager:self.contactsManager
-                                                                              preferences:self.preferences];
+            _notificationsManager = [NotificationsManager new];
         }
     }
 

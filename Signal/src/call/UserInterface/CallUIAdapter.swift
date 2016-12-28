@@ -7,7 +7,7 @@ import CallKit
 
 protocol CallUIAdaptee {
     func startOutgoingCall(_ call: SignalCall)
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager)
+    func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager)
     func answerCall(_ call: SignalCall)
     func endCall(_ call: SignalCall)
 }
@@ -19,25 +19,26 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
 
     let TAG = "[CallUIiOS8Adaptee]"
 
-    let notificationsManager: NotificationsManager
+    let notificationsAdapter: CallNotificationsAdapter
 
-    required init(notificationsManager: NotificationsManager) {
-        self.notificationsManager = notificationsManager
+    required init(notificationsAdapter: CallNotificationsAdapter) {
+        self.notificationsAdapter = notificationsAdapter
     }
 
     func startOutgoingCall(_ call: SignalCall) {
         Logger.error("\(TAG) TODO \(#function)")
     }
 
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
+    func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
         Logger.debug("\(TAG) \(#function)")
 
         // present Call View controller
         let callNotificationName = CallService.callServiceActiveCallNotificationName()
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
-    
+
+        // present lock screen notification
         if UIApplication.shared.applicationState != .active {
-            notificationsManager.incomingCall(fromSignalId: call.remotePhoneNumber)
+            notificationsAdapter.presentIncomingCall(fromSignalId: call.remotePhoneNumber, callerName: callerName)
         }
     }
 
@@ -66,7 +67,7 @@ class CallUICallKitAdaptee: CallUIAdaptee {
         providerDelegate.callManager.startCall(handle: call.remotePhoneNumber, video: call.hasVideo)
     }
 
-    func reportIncomingCall(_ call: SignalCall, audioManager: CallAudioManager) {
+    func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
         // FIXME weird to pass the audio manager in here.
         // Crux is, the peerconnectionclient is what controls the audio channel.
         // But a peerconnectionclient is per call.
@@ -95,24 +96,27 @@ class CallUIAdapter {
 
     let TAG = "[CallUIAdapter]"
     let adaptee: CallUIAdaptee
+    let contactsManager: OWSContactsManager
 
-    init(notificationsManager: NotificationsManager, callService: CallService) {
+    init(callService: CallService, contactsManager: OWSContactsManager, notificationsAdapter: CallNotificationsAdapter) {
+        self.contactsManager = contactsManager
         if Platform.isSimulator {
             // Callkit doesn't seem entirely supported in simulator.
             // e.g. you can't receive calls in the call screen.
             Logger.info("\(TAG) choosing non-callkit adaptee for simulator.")
-            adaptee = CallUIiOS8Adaptee(notificationsManager: notificationsManager)
+            adaptee = CallUIiOS8Adaptee(notificationsAdapter: notificationsAdapter)
         } else if #available(iOS 10.0, *) {
             Logger.info("\(TAG) choosing callkit adaptee for iOS10+")
             adaptee = CallUICallKitAdaptee(callService: callService)
         } else {
             Logger.info("\(TAG) choosing non-callkit adaptee for older iOS")
-            adaptee = CallUIiOS8Adaptee(notificationsManager: notificationsManager)
+            adaptee = CallUIiOS8Adaptee(notificationsAdapter: notificationsAdapter)
         }
     }
 
     func reportIncomingCall(_ call: SignalCall, thread: TSContactThread, audioManager: CallAudioManager) {
-        adaptee.reportIncomingCall(call, audioManager: audioManager)
+        let callerName = self.contactsManager.displayName(forPhoneIdentifier: call.remotePhoneNumber)
+        adaptee.reportIncomingCall(call, callerName: callerName, audioManager: audioManager)
     }
 
     func startOutgoingCall(_ call: SignalCall, thread: TSContactThread) {

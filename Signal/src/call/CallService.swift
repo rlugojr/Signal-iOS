@@ -6,11 +6,11 @@ import PromiseKit
 import WebRTC
 
 /**
- * ## Key
- * - SS: Signal Service Message
- * - DC: WebRTC Data Channel Message
+ * ## Call Setup (Signaling) Flow
  *
- * ## Call Flow
+ * ## Key
+ * - SS: Message sent via Signal Service
+ * - DC: Message sent via WebRTC Data Channel
  *
  * |          Caller            |          Callee         |
  * +----------------------------+-------------------------+
@@ -82,11 +82,13 @@ fileprivate let timeoutSeconds = 60
     // Used to coordinate promises across delegate methods
     var fulfillCallConnectedPromise: (()->())?
 
-    required init(accountManager: AccountManager, messageSender: MessageSender, notificationsManager: NotificationsManager) {
+    required init(accountManager: AccountManager, contactsManager: OWSContactsManager, messageSender: MessageSender, notificationsAdapter: CallNotificationsAdapter) {
         self.accountManager = accountManager
         self.messageSender = messageSender
+
         super.init()
-        self.callUIAdapter = CallUIAdapter(notificationsManager: notificationsManager, callService: self)
+
+        self.callUIAdapter = CallUIAdapter(callService: self, contactsManager: contactsManager, notificationsAdapter: notificationsAdapter)
     }
 
     // MARK: - Class Methods

@@ -13,17 +13,15 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     // MARK: Dependencies
 
     let accountManager: AccountManager
-    let contactsManager: OWSContactsManager
-    let messageSender: MessageSender
     let callService: CallService
+    let messageSender: MessageSender
 
     // MARK: Initializers
 
-    required init(accountManager: AccountManager, contactsManager: OWSContactsManager, messageSender: MessageSender, callService: CallService) {
+    required init(accountManager: AccountManager, callService: CallService, messageSender: MessageSender) {
         self.accountManager = accountManager
-        self.contactsManager = contactsManager
-        self.messageSender = messageSender
         self.callService = callService
+        self.messageSender = messageSender
     }
 
     // MARK: - Call Handlers

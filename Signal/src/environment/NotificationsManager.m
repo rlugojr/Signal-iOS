@@ -22,29 +22,17 @@
 @interface NotificationsManager ()
 
 @property SystemSoundID newMessageSound;
-@property (nonatomic, readonly) OWSContactsManager *contactsManager;
-@property (nonatomic, readonly, strong) id<OWSNotificationsAdaptee> notificationsAdaptee;
 
 @end
 
 @implementation NotificationsManager
 
-- (instancetype)initWithContactsManager:(OWSContactsManager *)contactsManager
-                            preferences:(PropertyListPreferences *)preferences
+- (instancetype)init
 {
     self = [super init];
 
     if (!self) {
         return self;
-    }
-
-    _contactsManager = contactsManager;
-
-    if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){ 10, 0, 0 }]) {
-        _notificationsAdaptee = [OWSUserNotificationsAdaptee new];
-    } else {
-        _notificationsAdaptee =
-            [[OWSLocalNotificationsAdaptee alloc] initWithContactsManager:contactsManager preferences:preferences];
     }
 
     NSURL *newMessageURL = [[NSBundle mainBundle] URLForResource:@"NewMessage" withExtension:@"aifc"];
@@ -53,8 +41,11 @@
     return self;
 }
 
+
+#pragma mark - Redphone Calls
+
 /**
- * Notify user for deprecated Redphone Call
+ * Notify user for Redphone Call
  */
 - (void)notifyUserForCall:(TSCall *)call inThread:(TSThread *)thread {
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
@@ -78,23 +69,40 @@
                     [NSString stringWithFormat:NSLocalizedString(@"MSGVIEW_MISSED_CALL", nil), [thread name]];
             }
 
-            [[PushManager sharedManager] presentNotification:notification];
+            [self presentNotification:notification];
         }
     }
 }
 
+#pragma mark - Signal Calls
+
 /**
  * Notify user for incoming WebRTC Call
  */
-
-- (void)incomingCallFromSignalId:(NSString *)signalId
+- (void)presentIncomingCallFromSignalId:(NSString *)signalId callerName:(NSString *)callerName
 {
-    if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
-        DDLogDebug(@"%@ Ignoring %s since app is in foreground", self.tag, __PRETTY_FUNCTION__);
-        return;
-    }
+    DDLogDebug(@"%@ incoming call from: %@", self.tag, signalId);
 
-    [self.notificationsAdaptee incomingCallFromSignalId:signalId];
+    UILocalNotification *notification = [UILocalNotification new];
+    notification.category = PushManagerCategoriesIncomingCall;
+    notification.soundName = @"r.caf";
+
+    PropertyListPreferences *prefs = [Environment getCurrent].preferences;
+    NSString *alertMessage;
+    switch ([prefs notificationPreviewType]) {
+        case NotificationNoNameNoPreview: {
+            alertMessage = NSLocalizedString(@"INCOMING_CALL", nil);
+            break;
+        }
+        case NotificationNameNoPreview:
+        case NotificationNamePreview: {
+            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"INCOMING_CALL_FROM", nil), callerName];
+            break;
+        }
+    }
+    notification.alertBody = [NSString stringWithFormat:@"☎️ %@", alertMessage];
+
+    [self presentNotification:notification];
 }
 
 /**
@@ -109,6 +117,9 @@
 //
 //    [self.notificationsAdaptee missedCallFromSignalId:signalid];
 //}
+
+
+#pragma mark - Signal Messages
 
 - (void)notifyUserForErrorMessage:(TSErrorMessage *)message inThread:(TSThread *)thread {
     NSString *messageDescription = message.description;
@@ -132,7 +143,7 @@
         }
         notification.alertBody = alertBodyString;
 
-        [[PushManager sharedManager] presentNotification:notification];
+        [self presentNotification:notification];
     } else {
         if ([Environment.preferences soundInForeground]) {
             AudioServicesPlayAlertSound(_newMessageSound);
@@ -140,7 +151,11 @@
     }
 }
 
-- (void)notifyUserForIncomingMessage:(TSIncomingMessage *)message from:(NSString *)name inThread:(TSThread *)thread {
+- (void)notifyUserForIncomingMessage:(TSIncomingMessage *)message
+                                from:(NSString *)name
+                            inThread:(TSThread *)thread
+                     contactsManager:(id<ContactsManagerProtocol>)contactsManager
+{
     NSString *messageDescription = message.description;
 
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive && messageDescription) {
@@ -154,7 +169,7 @@
                     @{Signal_Thread_UserInfo_Key : thread.uniqueId, Signal_Message_UserInfo_Key : message.uniqueId};
 
                 if ([thread isGroupThread]) {
-                    NSString *sender = [self.contactsManager displayNameForPhoneIdentifier:message.authorId];
+                    NSString *sender = [contactsManager displayNameForPhoneIdentifier:message.authorId];
                     NSString *threadName = [NSString stringWithFormat:@"\"%@\"", name];
                     notification.alertBody =
                         [NSString stringWithFormat:NSLocalizedString(@"APN_MESSAGE_IN_GROUP_DETAILED", nil),
@@ -184,12 +199,19 @@
                 break;
         }
 
-        [[PushManager sharedManager] presentNotification:notification];
+        [self presentNotification:notification];
     } else {
         if ([Environment.preferences soundInForeground]) {
             AudioServicesPlayAlertSound(_newMessageSound);
         }
     }
+}
+
+#pragma mark - Util
+
+- (void)presentNotification:(UILocalNotification *)notification
+{
+    [[PushManager sharedManager] presentNotification:notification];
 }
 
 #pragma mark - Logging

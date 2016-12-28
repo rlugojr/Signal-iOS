@@ -9,6 +9,7 @@
 #import "Environment.h"
 #import "NSData+Base64.h"
 #import "NotificationsManager.h"
+#import "OWSCallNotificationsAdaptee.h"
 #import "OWSContactAvatarBuilder.h"
 #import "OWSContactsManager.h"
 #import "OWSLogger.h"

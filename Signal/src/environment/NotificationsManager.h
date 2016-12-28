@@ -1,6 +1,7 @@
 //  Created by Frederic Jacobs on 22/12/15.
 //  Copyright © 2015 Open Whisper Systems. All rights reserved.
 
+#import "OWSCallNotificationsAdaptee.h"
 #import <SignalServiceKit/NotificationsProtocol.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -11,17 +12,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class OWSSignalCall;
 @class PropertyListPreferences;
 
-@interface NotificationsManager : NSObject <NotificationsProtocol>
+@interface NotificationsManager : NSObject <NotificationsProtocol, OWSCallNotificationsAdaptee>
 
-- (instancetype)initWithContactsManager:(OWSContactsManager *)contactsManager
-                            preferences:(PropertyListPreferences *)preferences NS_DESIGNATED_INITIALIZER;
-
-- (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)new NS_UNAVAILABLE;
+#pragma mark - RedPhone Call Notifications
 
 - (void)notifyUserForCall:(TSCall *)call inThread:(TSThread *)thread;
-- (void)incomingCallFromSignalId:(NSString *)signalId NS_SWIFT_NAME(incomingCall(fromSignalId:));
-//- (void)missedCall:(OWSSignalCall *)call thread:(TSContactThread *)thread;
 
 @end
 
