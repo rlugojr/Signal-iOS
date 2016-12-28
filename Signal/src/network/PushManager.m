@@ -298,6 +298,19 @@
     } else if ([identifier isEqualToString:PushManagerActionsDeclineCall]) {
         DDLogInfo(@"%@ received decline call action", self.tag);
 
+        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysCallLocalId];
+        if (!localIdString) {
+            DDLogError(@"%@ missing localIdString.", self.tag);
+            return;
+        }
+
+        NSUUID *localId = [[NSUUID alloc] initWithUUIDString:localIdString];
+        if (!localId) {
+            DDLogError(@"%@ localIdString failed to parse as UUID.", self.tag);
+            return;
+        }
+
+        [self.callService handleDeclineCallWithLocalId:localId];
     } else if ([identifier isEqualToString:PushManagerActionsCallBack]) {
         DDLogInfo(@"%@ received call back action", self.tag);
 

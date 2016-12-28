@@ -508,6 +508,36 @@ fileprivate let timeoutSeconds = 60
         peerConnectionClient.setVideoEnabled(enabled: call.hasVideo)
     }
 
+    public func handleDeclineCall(localId: UUID) {
+        // #function is called from objc, how to access swift defiend dispatch queue (OS_dispatch_queue)
+        //assertOnSignalingQueue()
+
+        guard let call = self.call else {
+            handleFailedCall(error: .assertionError(description:"\(TAG) call was unexpectedly nil in \(#function)"))
+            return
+        }
+
+        guard call.localId == localId else {
+            handleFailedCall(error: .assertionError(description:"\(TAG) callLocalId:\(localId) doesn't match current calls: \(call.localId)"))
+            return
+        }
+
+        // Because we may not be on signalingQueue (because this method is called from Objc which doesn't have
+        // access to signalingQueue (that I can find). FIXME?
+        type(of: self).signalingQueue.async {
+            self.handleDeclineCall(call)
+        }
+    }
+
+    public func handleDeclineCall(_ call: SignalCall) {
+        assertOnSignalingQueue()
+
+        Logger.info("\(TAG) in \(#function)")
+
+        // Currently we just handle this as a hangup. But we could offer more descriptive action. e.g. DataChannel message
+        handleLocalHungupCall(call)
+    }
+
     func handleLocalHungupCall(_ call: SignalCall) {
         assertOnSignalingQueue()
 
