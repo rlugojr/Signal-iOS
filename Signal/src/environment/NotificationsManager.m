@@ -79,13 +79,14 @@
 /**
  * Notify user for incoming WebRTC Call
  */
-- (void)presentIncomingCallFromSignalId:(NSString *)signalId callerName:(NSString *)callerName
+- (void)presentIncomingCall:(SignalCall *)call callerName:(NSString *)callerName
 {
-    DDLogDebug(@"%@ incoming call from: %@", self.tag, signalId);
+    DDLogDebug(@"%@ incoming call from: %@", self.tag, call.remotePhoneNumber);
 
     UILocalNotification *notification = [UILocalNotification new];
     notification.category = PushManagerCategoriesIncomingCall;
     notification.soundName = @"r.caf";
+    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : call.localId.UUIDString };
 
     PropertyListPreferences *prefs = [Environment getCurrent].preferences;
     NSString *alertMessage;

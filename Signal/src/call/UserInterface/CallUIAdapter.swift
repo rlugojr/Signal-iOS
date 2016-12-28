@@ -26,7 +26,7 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
     }
 
     func startOutgoingCall(_ call: SignalCall) {
-        Logger.error("\(TAG) TODO \(#function)")
+        Logger.debug("\(TAG) \(#function) is no-op")
     }
 
     func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
@@ -37,8 +37,10 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
 
         // present lock screen notification
-        if UIApplication.shared.applicationState != .active {
-            notificationsAdapter.presentIncomingCall(fromSignalId: call.remotePhoneNumber, callerName: callerName)
+        if UIApplication.shared.applicationState == .active {
+            Logger.debug("\(TAG) skipping notification since app is already active.")
+        } else {            
+            notificationsAdapter.presentIncomingCall(call, callerName: callerName)
         }
     }
 

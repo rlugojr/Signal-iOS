@@ -18,16 +18,14 @@ enum CallState: String {
 
 /**
  * Data model for a WebRTC backed voice/video call.
- * This deprecates Redphone call infrastructure.
  */
-@objc(OWSSignalCall)
-class SignalCall: NSObject {
+@objc class SignalCall: NSObject {
 
     let TAG = "[SignalCall]"
 
     var state: CallState {
         didSet {
-            Logger.debug("\(TAG) state changed to:\(state)")
+            Logger.debug("\(TAG) state changed: \(oldValue) -> \(state)")
             stateDidChange?(state)
         }
     }

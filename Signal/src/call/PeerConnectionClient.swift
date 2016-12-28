@@ -255,7 +255,7 @@ class PeerConnectionClient: NSObject, CallAudioManager {
 
     func negotiateAnswerSessionDescription(constraints: RTCMediaConstraints) -> Promise<HardenedRTCSessionDescription> {
         return Promise { fulfill, reject in
-            Logger.verbose("\(self.TAG) negotating answer session.")
+            Logger.debug("\(self.TAG) negotiating answer session.")
 
             peerConnection.answer(for: constraints, completionHandler: { (sdp: RTCSessionDescription?, error: Error?) in
                 guard error == nil else {

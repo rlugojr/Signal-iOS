@@ -21,7 +21,7 @@ class UserNotificationsAdaptee: NSObject, OWSCallNotificationsAdaptee {
 
     private let center = UNUserNotificationCenter.current()
 
-    public func presentIncomingCall(fromSignalId signalId: String!, callerName: String!) {
+    public func presentIncomingCall(_ call: SignalCall, callerName: String) {
         Logger.debug("\(TAG) \(#function) is no-op, because it's handled with callkit.")
     }
 

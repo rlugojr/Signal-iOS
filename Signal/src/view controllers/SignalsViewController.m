@@ -156,7 +156,7 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
 
 - (void)handleActiveCallNotifciation:(NSNotification *)notification
 {
-    if (![notification.object isKindOfClass:[OWSSignalCall class]]) {
+    if (![notification.object isKindOfClass:[SignalCall class]]) {
         DDLogError(@"%@ expected presentCall observer to be notified with a SignalCall, but found %@",
             self.tag,
             notification.object);
@@ -164,7 +164,7 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        OWSSignalCall *call = (OWSSignalCall *)notification.object;
+        SignalCall *call = (SignalCall *)notification.object;
         [self performSegueWithIdentifier:SignalsViewControllerSegueShowIncomingCall sender:call];
     });
 }
@@ -462,11 +462,11 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
         OWSCallViewController *callViewController = (OWSCallViewController *)segue.destinationViewController;
         [callViewController setIncomingCallDirection];
 
-        if (![sender isKindOfClass:[OWSSignalCall class]]) {
+        if (![sender isKindOfClass:[SignalCall class]]) {
             DDLogError(@"%@ expecting call segueu to be sent by a SignalCall, but found: %@", self.tag, sender);
             return;
         }
-        OWSSignalCall *call = (OWSSignalCall *)sender;
+        SignalCall *call = (SignalCall *)sender;
         TSContactThread *thread = [TSContactThread getOrCreateThreadWithContactId:call.remotePhoneNumber];
         callViewController.thread = thread;
         callViewController.call = call;

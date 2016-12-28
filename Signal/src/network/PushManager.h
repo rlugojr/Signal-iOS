@@ -35,13 +35,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define Signal_CallBack_Category @"Signal_CallBack"
 
-#pragma mark Signal Calls
+#pragma mark Signal Calls constants
 
 FOUNDATION_EXPORT NSString *const PushManagerCategoriesIncomingCall;
 FOUNDATION_EXPORT NSString *const PushManagerCategoriesMissedCall;
+
 FOUNDATION_EXPORT NSString *const PushManagerActionsAcceptCall;
 FOUNDATION_EXPORT NSString *const PushManagerActionsDeclineCall;
 FOUNDATION_EXPORT NSString *const PushManagerActionsCallBack;
+
+FOUNDATION_EXPORT NSString *const PushManagerUserInfoKeysCallLocalId;
 
 typedef void (^failedPushRegistrationBlock)(NSError *error);
 typedef void (^pushTokensSuccessBlock)(NSString *pushToken, NSString *voipToken);

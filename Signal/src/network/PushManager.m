@@ -36,6 +36,7 @@
 @property (nonatomic, readonly) OWSContactsManager *contactsManager;
 @property (nonatomic, readonly) OWSMessageSender *messageSender;
 @property (nonatomic, readonly) OWSMessageFetcherJob *messageFetcherJob;
+@property (nonatomic, readonly, strong) CallService *callService;
 
 @end
 
@@ -57,6 +58,7 @@
                           networkManager:[Environment getCurrent].networkManager
                           storageManager:[TSStorageManager sharedManager]
                       callMessageHandler:[Environment getCurrent].callMessageHandler
+                             callService:[Environment getCurrent].callService
                          contactsUpdater:[Environment getCurrent].contactsUpdater];
 }
 
@@ -65,6 +67,7 @@
                          networkManager:(TSNetworkManager *)networkManager
                          storageManager:(TSStorageManager *)storageManager
                      callMessageHandler:(OWSWebRTCCallMessageHandler *)callMessageHandler
+                            callService:(CallService *)callService
                         contactsUpdater:(ContactsUpdater *)contactsUpdater
 {
     self = [super init];
@@ -73,6 +76,7 @@
     }
 
     _contactsManager = contactsManager;
+    _callService = callService;
 
     // DEPRECATED Redphone uses notification tracker.
     _notificationTracker = notificationTracker;
@@ -229,6 +233,7 @@
     DDLogInfo(@"received: %s", __PRETTY_FUNCTION__);
 
     if ([identifier isEqualToString:Signal_Message_Reply_Identifier]) {
+        DDLogInfo(@"%@ received reply identifier", self.tag);
         NSString *threadId = notification.userInfo[Signal_Thread_UserInfo_Key];
 
         if (threadId) {
@@ -255,24 +260,49 @@
                 }];
         }
     } else if ([identifier isEqualToString:Signal_Call_Accept_Identifier]) {
+        DDLogInfo(@"%@ received redphone accept action", self.tag);
         [Environment.phoneManager answerCall];
 
         completionHandler();
     } else if ([identifier isEqualToString:Signal_Call_Decline_Identifier]) {
+        DDLogInfo(@"%@ received redphone decline action", self.tag);
         [Environment.phoneManager hangupOrDenyCall];
 
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
           completionHandler();
         });
     } else if ([identifier isEqualToString:Signal_CallBack_Identifier]) {
+        DDLogInfo(@"%@ received redphone callback action", self.tag);
         NSString *contactId = notification.userInfo[Signal_Call_UserInfo_Key];
         PhoneNumber *number = [PhoneNumber tryParsePhoneNumberFromUserSpecifiedText:contactId];
         Contact *contact = [self.contactsManager latestContactForPhoneNumber:number];
         [Environment.phoneManager initiateOutgoingCallToContact:contact atRemoteNumber:number];
     } else if ([identifier isEqualToString:Signal_Message_MarkAsRead_Identifier]) {
         [self markAllInThreadAsRead:notification.userInfo completionHandler:completionHandler];
+    } else if ([identifier isEqualToString:PushManagerActionsAcceptCall]) {
+        DDLogInfo(@"%@ received accept call action", self.tag);
+
+        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysCallLocalId];
+        if (!localIdString) {
+            DDLogError(@"%@ missing localIdString.", self.tag);
+            return;
+        }
+
+        NSUUID *localId = [[NSUUID alloc] initWithUUIDString:localIdString];
+        if (!localId) {
+            DDLogError(@"%@ localIdString failed to parse as UUID.", self.tag);
+            return;
+        }
+
+        [self.callService handleAnswerCallWithLocalId:localId];
+    } else if ([identifier isEqualToString:PushManagerActionsDeclineCall]) {
+        DDLogInfo(@"%@ received decline call action", self.tag);
+
+    } else if ([identifier isEqualToString:PushManagerActionsCallBack]) {
+        DDLogInfo(@"%@ received call back action", self.tag);
+
     } else {
-        DDLogWarn(@"%@ Unhandled action with identifier: %@", self.tag, identifier);
+        DDLogDebug(@"%@ Unhandled action with identifier: %@", self.tag, identifier);
 
         NSString *threadId = notification.userInfo[Signal_Thread_UserInfo_Key];
         [Environment messageThreadId:threadId];
@@ -461,6 +491,8 @@ NSString *const PushManagerCategoriesMissedCall = @"PushManagerCategoriesMissedC
 NSString *const PushManagerActionsAcceptCall = @"PushManagerActionsAcceptCall";
 NSString *const PushManagerActionsDeclineCall = @"PushManagerActionsDeclineCall";
 NSString *const PushManagerActionsCallBack = @"PushManagerActionsCallBack";
+
+NSString *const PushManagerUserInfoKeysCallLocalId = @"PushManagerUserInfoKeysCallLocalId";
 
 - (UIUserNotificationCategory *)signalIncomingCallCategory
 {

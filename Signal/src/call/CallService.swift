@@ -43,8 +43,9 @@ import WebRTC
 
 enum CallError: Error {
     case assertionError(description: String)
-    case timeout(description: String)
+    case disconnected
     case externalError(underlyingError: Error)
+    case timeout(description: String)
 }
 
 // FIXME TODO do we need to timeout?
@@ -106,7 +107,7 @@ fileprivate let timeoutSeconds = 60
     /**
      * Initiate an outgoing call.
      */
-    func handleOutgoingCall(thread: TSContactThread) -> SignalCall {
+    public func handleOutgoingCall(thread: TSContactThread) -> SignalCall {
         assertOnSignalingQueue()
 
         self.thread = thread
@@ -159,7 +160,7 @@ fileprivate let timeoutSeconds = 60
     /**
      * Called by the call initiator after receiving a CallAnswer from the callee.
      */
-    func handleReceivedAnswer(thread: TSContactThread, callId: UInt64, sessionDescription: String) {
+    public func handleReceivedAnswer(thread: TSContactThread, callId: UInt64, sessionDescription: String) {
         Logger.debug("\(TAG) received call answer for call: \(callId) thread: \(thread)")
         assertOnSignalingQueue()
 
@@ -202,7 +203,7 @@ fileprivate let timeoutSeconds = 60
         }
     }
 
-    func handleLocalBusyCall(thread: TSContactThread, callId: UInt64) {
+    private func handleLocalBusyCall(thread: TSContactThread, callId: UInt64) {
         Logger.debug("\(TAG) \(#function) for call: \(callId) thread: \(thread)")
         assertOnSignalingQueue()
 
@@ -215,7 +216,7 @@ fileprivate let timeoutSeconds = 60
         callRecord.save()
     }
 
-    func handleRemoteBusy(thread: TSContactThread) {
+    public func handleRemoteBusy(thread: TSContactThread) {
         Logger.debug("\(TAG) \(#function) for thread: \(thread)")
         assertOnSignalingQueue()
 
@@ -228,7 +229,7 @@ fileprivate let timeoutSeconds = 60
         terminateCall()
     }
 
-    func isBusy() -> Bool {
+    private func isBusy() -> Bool {
         // TODO CallManager adapter?
         return false
     }
@@ -237,7 +238,7 @@ fileprivate let timeoutSeconds = 60
      * Received an incoming call offer. We still have to complete setting up the Signaling channel before we notify
      * the user of an incoming call.
      */
-    func handleReceivedOffer(thread: TSContactThread, callId: UInt64, sessionDescription callerSessionDescription: String) {
+    public func handleReceivedOffer(thread: TSContactThread, callId: UInt64, sessionDescription callerSessionDescription: String) {
         assertOnSignalingQueue()
 
         Logger.verbose("\(TAG) receivedCallOffer for thread:\(thread)")
@@ -253,6 +254,11 @@ fileprivate let timeoutSeconds = 60
         self.thread = thread
         let newCall = SignalCall(signalingId: callId, state: .answering, remotePhoneNumber: thread.contactIdentifier())
         call = newCall
+
+        let backgroundTask = UIApplication.shared.beginBackgroundTask {
+            let timeout = CallError.timeout(description: "background task time ran out before call connected.")
+            self.handleFailedCall(error: timeout)
+        }
 
         outgoingCallPromise = firstly {
             return getIceServers()
@@ -295,19 +301,23 @@ fileprivate let timeoutSeconds = 60
                 let externalError = CallError.externalError(underlyingError: error)
                 self.handleFailedCall(error: externalError)
             }
+        }.always {
+            Logger.debug("\(self.TAG) ending background task awaiting inbound call connection")
+            UIApplication.shared.endBackgroundTask(backgroundTask)
         }
     }
 
     public func handleRemoteAddedIceCandidate(thread: TSContactThread, callId: UInt64, sdp: String, lineIndex: Int32, mid: String) {
         assertOnSignalingQueue()
-        Logger.debug("\(TAG) received ice update")
+        Logger.debug("\(TAG) called \(#function)")
+
         guard self.thread != nil else {
-            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread) since there is no current thread. \(self.thread)"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread.uniqueId) since there is no current thread. TODO: Signaling messages out of order?"))
             return
         }
 
         guard thread.contactIdentifier() == self.thread!.contactIdentifier() else {
-            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread) since the current call is for thread: \(self.thread)"))
+            handleFailedCall(error: .assertionError(description: "ignoring remote ice update for thread: \(thread.uniqueId) since the current call is for thread: \(self.thread!.uniqueId)"))
             return
         }
 
@@ -329,7 +339,7 @@ fileprivate let timeoutSeconds = 60
         peerConnectionClient.addIceCandidate(RTCIceCandidate(sdp: sdp, sdpMLineIndex: lineIndex, sdpMid: mid))
     }
 
-    public func handleLocalAddedIceCandidate(_ iceCandidate: RTCIceCandidate) {
+    private func handleLocalAddedIceCandidate(_ iceCandidate: RTCIceCandidate) {
         assertOnSignalingQueue()
 
         guard let call = self.call else {
@@ -362,7 +372,7 @@ fileprivate let timeoutSeconds = 60
         }
     }
 
-    func handleIceConnected() {
+    private func handleIceConnected() {
         assertOnSignalingQueue()
 
         Logger.debug("\(TAG) in \(#function)")
@@ -383,19 +393,21 @@ fileprivate let timeoutSeconds = 60
         }
 
         switch call.state {
-        case .answering:
-            self.fulfillCallConnectedPromise?()
-            call.state = .localRinging
-            self.callUIAdapter.reportIncomingCall(call, thread: thread, audioManager: peerConnectionClient)
         case .dialing:
             call.state = .remoteRinging
             self.callUIAdapter.startOutgoingCall(call, thread: thread)
+        case .answering:
+            call.state = .localRinging
+            self.callUIAdapter.reportIncomingCall(call, thread: thread, audioManager: peerConnectionClient)
+            self.fulfillCallConnectedPromise?()
+        case .remoteRinging:
+            Logger.info("\(TAG) call alreading ringing. Ignoring \(#function)")
         default:
             Logger.debug("\(TAG) unexpected call state for \(#function): \(call.state)")
         }
     }
 
-    func handleRemoteHangup(thread: TSContactThread) {
+    public func handleRemoteHangup(thread: TSContactThread) {
         Logger.debug("\(TAG) in \(#function)")
         assertOnSignalingQueue()
 
@@ -417,7 +429,28 @@ fileprivate let timeoutSeconds = 60
         terminateCall()
     }
 
-    func handleAnswerCall(_ call: SignalCall) {
+    public func handleAnswerCall(localId: UUID) {
+        // #function is called from objc, how to access swift defiend dispatch queue (OS_dispatch_queue)
+        //assertOnSignalingQueue()
+
+        guard let call = self.call else {
+            handleFailedCall(error: .assertionError(description:"\(TAG) call was unexpectedly nil in \(#function)"))
+            return
+        }
+
+        guard call.localId == localId else {
+            handleFailedCall(error: .assertionError(description:"\(TAG) callLocalId:\(localId) doesn't match current calls: \(call.localId)"))
+            return
+        }
+
+        // Because we may not be on signalingQueue (because this method is called from Objc which doesn't have 
+        // access to signalingQueue (that I can find). FIXME?
+        type(of: self).signalingQueue.async {
+            self.handleAnswerCall(call)
+        }
+    }
+
+    public func handleAnswerCall(_ call: SignalCall) {
         assertOnSignalingQueue()
 
         Logger.debug("\(TAG) in \(#function)")
@@ -598,7 +631,7 @@ fileprivate let timeoutSeconds = 60
         return firstly {
             return accountManager.getTurnServerInfo()
         }.then(on: CallService.signalingQueue) { turnServerInfo -> [RTCIceServer] in
-            Logger.debug("\(self.TAG) got turn server info \(turnServerInfo)")
+            Logger.debug("\(self.TAG) got turn server urls: \(turnServerInfo.urls)")
 
             return turnServerInfo.urls.map { url in
                 if url.hasPrefix("turn") {
@@ -700,7 +733,7 @@ fileprivate let timeoutSeconds = 60
 
     /** Called when the SignalingState changed. */
     public func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
-        Logger.debug("\(TAG) didChange signalingState:\(stateChanged.rawValue)")
+        Logger.debug("\(TAG) didChange signalingState:\(stateChanged.debugDescription)")
     }
 
     /** Called when media is received on a new stream from remote peer. */
@@ -727,12 +760,12 @@ fileprivate let timeoutSeconds = 60
             case .connected, .completed:
                 self.handleIceConnected()
             case .failed:
-                Logger.warn("\(self.TAG) RTCIceConnection failed. Hanging up.")
+                Logger.warn("\(self.TAG) RTCIceConnection failed.")
                 guard let thread = self.thread else {
                     Logger.error("\(self.TAG) refusing to hangup for failed IceConnection because there is no current thread")
                     return
                 }
-                self.handleRemoteHangup(thread: thread)
+                self.handleFailedCall(error: CallError.disconnected)
             default:
                 Logger.debug("\(self.TAG) ignoring change IceConnectionState:\(newState.debugDescription)")
             }
@@ -770,7 +803,6 @@ fileprivate let timeoutSeconds = 60
             peerConnectionClient.dataChannel = dataChannel
         }
     }
-
 }
 
 fileprivate extension UInt64 {
@@ -778,6 +810,27 @@ fileprivate extension UInt64 {
         var random: UInt64 = 0
         arc4random_buf(&random, MemoryLayout.size(ofValue: random))
         return random
+    }
+}
+
+// Mark: Pretty Print Objc enums.
+
+fileprivate extension RTCSignalingState {
+    var debugDescription: String {
+        switch self {
+        case .stable:
+            return "stable"
+        case .haveLocalOffer:
+            return "haveLocalOffer"
+        case .haveLocalPrAnswer:
+            return "haveLocalPrAnswer"
+        case .haveRemoteOffer:
+            return "haveRemoteOffer"
+        case .haveRemotePrAnswer:
+            return "haveRemotePrAnswer"
+        case .closed:
+            return "closed"
+        }
     }
 }
 
