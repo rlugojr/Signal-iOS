@@ -113,20 +113,22 @@ fileprivate let timeoutSeconds = 60
         self.thread = thread
         Logger.verbose("\(TAG) handling outgoing call to thread:\(thread)")
 
-        let newCall = SignalCall(signalingId: UInt64.ows_random(), state: .dialing, remotePhoneNumber: thread.contactIdentifier())
-        call = newCall
+        let call = SignalCall(signalingId: UInt64.ows_random(), state: .dialing, remotePhoneNumber: thread.contactIdentifier())
+        self.call = call
 
         sendIceUpdatesImmediately = false
         pendingIceUpdateMessages = []
 
-        let callRecord = TSCall(timestamp: NSDate.ows_millisecondTimeStamp(), withCallNumber: newCall.remotePhoneNumber, callType: RPRecentCallTypeOutgoing, in: thread)
+        let callRecord = TSCall(timestamp: NSDate.ows_millisecondTimeStamp(), withCallNumber: call.remotePhoneNumber, callType: RPRecentCallTypeOutgoing, in: thread)
         callRecord.save()
 
         guard self.peerConnectionClient == nil else {
             Logger.error("\(TAG) peerconnection was unexpectedly already set.")
-            newCall.state = .localFailure
-            return newCall
+            call.state = .localFailure
+            return call
         }
+
+        self.callUIAdapter.startOutgoingCall(call, thread: thread)
 
         _ = getIceServers().then(on: CallService.signalingQueue) { iceServers -> Promise<HardenedRTCSessionDescription> in
             Logger.debug("\(self.TAG) got ice servers:\(iceServers)")
@@ -139,7 +141,7 @@ fileprivate let timeoutSeconds = 60
             return self.peerConnectionClient!.createOffer()
         }.then(on: CallService.signalingQueue) { (sessionDescription: HardenedRTCSessionDescription) -> Promise<Void> in
             return self.peerConnectionClient!.setLocalSessionDescription(sessionDescription).then(on: CallService.signalingQueue) {
-                let offerMessage = OWSCallOfferMessage(callId: newCall.signalingId, sessionDescription: sessionDescription.sdp)
+                let offerMessage = OWSCallOfferMessage(callId: call.signalingId, sessionDescription: sessionDescription.sdp)
                 let callMessage = OWSOutgoingCallMessage(thread: thread, offerMessage: offerMessage)
                 return self.sendMessage(callMessage)
             }
@@ -154,7 +156,7 @@ fileprivate let timeoutSeconds = 60
             }
         }
 
-        return newCall
+        return call
     }
 
     /**
@@ -316,6 +318,18 @@ fileprivate let timeoutSeconds = 60
         }
     }
 
+    public func handleCallBack(recipientId: String) {
+        guard self.call == nil else {
+            Logger.error("\(TAG) unexpectedly found an existing call when trying to call back: \(recipientId)")
+            return
+        }
+
+        let thread = TSContactThread.getOrCreateThread(contactId: recipientId)
+        let call = handleOutgoingCall(thread: thread)
+
+        self.callUIAdapter.showCall(call)
+    }
+
     public func handleRemoteAddedIceCandidate(thread: TSContactThread, callId: UInt64, sdp: String, lineIndex: Int32, mid: String) {
         assertOnSignalingQueue()
         Logger.debug("\(TAG) called \(#function)")
@@ -404,7 +418,6 @@ fileprivate let timeoutSeconds = 60
         switch call.state {
         case .dialing:
             call.state = .remoteRinging
-            self.callUIAdapter.startOutgoingCall(call, thread: thread)
         case .answering:
             call.state = .localRinging
             self.callUIAdapter.reportIncomingCall(call, thread: thread, audioManager: peerConnectionClient)

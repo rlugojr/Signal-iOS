@@ -89,7 +89,7 @@
     notification.category = PushManagerCategoriesIncomingCall;
     notification.soundName = @"r.caf";
     NSString *localCallId = call.localId.UUIDString;
-    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : localCallId };
+    notification.userInfo = @{ PushManagerUserInfoKeysLocalCallId : localCallId };
 
     PropertyListPreferences *prefs = [Environment getCurrent].preferences;
     NSString *alertMessage;
@@ -100,7 +100,8 @@
         }
         case NotificationNameNoPreview:
         case NotificationNamePreview: {
-            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"INCOMING_CALL_FROM", @"notification body"), callerName];
+            alertMessage =
+                [NSString stringWithFormat:NSLocalizedString(@"INCOMING_CALL_FROM", @"notification body"), callerName];
             break;
         }
     }
@@ -117,7 +118,10 @@
     UILocalNotification *notification = [UILocalNotification new];
     notification.category = PushManagerCategoriesMissedCall;
     NSString *localCallId = call.localId.UUIDString;
-    notification.userInfo = @{ PushManagerUserInfoKeysCallLocalId : localCallId };
+    notification.userInfo = @{
+        PushManagerUserInfoKeysLocalCallId : localCallId,
+        PushManagerUserInfoKeysCallBackSignalRecipientId : call.remotePhoneNumber
+    };
 
     PropertyListPreferences *prefs = [Environment getCurrent].preferences;
     NSString *alertMessage;
@@ -128,13 +132,14 @@
         }
         case NotificationNameNoPreview:
         case NotificationNamePreview: {
-            alertMessage = [NSString stringWithFormat:NSLocalizedString(@"MSGVIEW_MISSED_CALL", @"notification body"), callerName];
+            alertMessage =
+                [NSString stringWithFormat:NSLocalizedString(@"MSGVIEW_MISSED_CALL", @"notification body"), callerName];
             break;
         }
     }
     notification.alertBody = [NSString stringWithFormat:@"☎️ %@", alertMessage];
 
-    [self presentNotification:notification identifier:localCallId   ];
+    [self presentNotification:notification identifier:localCallId];
 }
 
 #pragma mark - Signal Messages

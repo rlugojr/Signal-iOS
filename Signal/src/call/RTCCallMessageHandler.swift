@@ -29,7 +29,7 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     public func receivedOffer(_ offer: OWSSignalServiceProtosCallMessageOffer, from callerId: String) {
         Logger.verbose("\(TAG) handling offer from caller:\(callerId)")
 
-        let thread = TSContactThread.getOrCreateThread(withContactId: callerId)
+        let thread = TSContactThread.getOrCreateThread(contactId: callerId)
         CallService.signalingQueue.async {
             _ = self.callService.handleReceivedOffer(thread: thread, callId: offer.id, sessionDescription: offer.sessionDescription)
         }
@@ -38,7 +38,7 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     public func receivedAnswer(_ answer: OWSSignalServiceProtosCallMessageAnswer, from callerId: String) {
         Logger.verbose("\(TAG) handling answer from caller:\(callerId)")
 
-        let thread = TSContactThread.getOrCreateThread(withContactId: callerId)
+        let thread = TSContactThread.getOrCreateThread(contactId: callerId)
         CallService.signalingQueue.async {
             self.callService.handleReceivedAnswer(thread: thread, callId: answer.id, sessionDescription: answer.sessionDescription)
         }
@@ -47,7 +47,7 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     public func receivedIceUpdate(_ iceUpdate: OWSSignalServiceProtosCallMessageIceUpdate, from callerId: String) {
         Logger.verbose("\(TAG) handling iceUpdates from caller:\(callerId)")
 
-        let thread = TSContactThread.getOrCreateThread(withContactId: callerId)
+        let thread = TSContactThread.getOrCreateThread(contactId: callerId)
 
         // Discrepency between our protobuf's sdpMlineIndex, which is unsigned, 
         // while the RTC iOS API requires a signed int.
@@ -61,7 +61,7 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     public func receivedHangup(_ hangup: OWSSignalServiceProtosCallMessageHangup, from callerId: String) {
         Logger.verbose("\(TAG) handling 'hangup' from caller:\(callerId)")
 
-        let thread = TSContactThread.getOrCreateThread(withContactId: callerId)
+        let thread = TSContactThread.getOrCreateThread(contactId: callerId)
 
         CallService.signalingQueue.async {
             self.callService.handleRemoteHangup(thread: thread)
@@ -71,7 +71,7 @@ class WebRTCCallMessageHandler: NSObject, OWSCallMessageHandler {
     public func receivedBusy(_ busy: OWSSignalServiceProtosCallMessageBusy, from callerId: String) {
         Logger.verbose("\(TAG) handling 'busy' from caller:\(callerId)")
 
-        let thread = TSContactThread.getOrCreateThread(withContactId: callerId)
+        let thread = TSContactThread.getOrCreateThread(contactId: callerId)
 
         CallService.signalingQueue.async {
             self.callService.handleRemoteBusy(thread: thread)

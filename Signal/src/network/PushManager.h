@@ -44,7 +44,8 @@ FOUNDATION_EXPORT NSString *const PushManagerActionsAcceptCall;
 FOUNDATION_EXPORT NSString *const PushManagerActionsDeclineCall;
 FOUNDATION_EXPORT NSString *const PushManagerActionsCallBack;
 
-FOUNDATION_EXPORT NSString *const PushManagerUserInfoKeysCallLocalId;
+FOUNDATION_EXPORT NSString *const PushManagerUserInfoKeysCallBackSignalRecipientId;
+FOUNDATION_EXPORT NSString *const PushManagerUserInfoKeysLocalCallId;
 
 typedef void (^failedPushRegistrationBlock)(NSError *error);
 typedef void (^pushTokensSuccessBlock)(NSString *pushToken, NSString *voipToken);

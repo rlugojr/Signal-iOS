@@ -13,6 +13,13 @@ protocol CallUIAdaptee {
     func endCall(_ call: SignalCall)
 }
 
+extension CallUIAdaptee {
+    func showCall(_ call: SignalCall) {
+        let callNotificationName = CallService.callServiceActiveCallNotificationName()
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+    }
+}
+
 /**
  * Manage call related UI in a pre-CallKit world.
  */
@@ -28,6 +35,7 @@ class CallUIiOS8Adaptee: CallUIAdaptee {
 
     public func startOutgoingCall(_ call: SignalCall) {
         Logger.debug("\(TAG) \(#function) is no-op")
+        // iOS8 handles call within the Signal-iOS interface.
     }
 
     public func reportIncomingCall(_ call: SignalCall, callerName: String, audioManager: CallAudioManager) {
@@ -96,8 +104,7 @@ class CallUICallKitAdaptee: CallUIAdaptee {
     }
 
     func answerCall(_ call: SignalCall) {
-        let callNotificationName = CallService.callServiceActiveCallNotificationName()
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: callNotificationName), object: call)
+        showCall(call)
     }
 
     func endCall(_ call: SignalCall) {
@@ -108,10 +115,10 @@ class CallUICallKitAdaptee: CallUIAdaptee {
 class CallUIAdapter {
 
     let TAG = "[CallUIAdapter]"
-    let adaptee: CallUIAdaptee
-    let contactsManager: OWSContactsManager
+    private let adaptee: CallUIAdaptee
+    private let contactsManager: OWSContactsManager
 
-    init(callService: CallService, contactsManager: OWSContactsManager, notificationsAdapter: CallNotificationsAdapter) {
+    required init(callService: CallService, contactsManager: OWSContactsManager, notificationsAdapter: CallNotificationsAdapter) {
         self.contactsManager = contactsManager
         if Platform.isSimulator {
             // Callkit doesn't seem entirely supported in simulator.
@@ -127,26 +134,30 @@ class CallUIAdapter {
         }
     }
 
-    func reportIncomingCall(_ call: SignalCall, thread: TSContactThread, audioManager: CallAudioManager) {
+    public func reportIncomingCall(_ call: SignalCall, thread: TSContactThread, audioManager: CallAudioManager) {
         let callerName = self.contactsManager.displayName(forPhoneIdentifier: call.remotePhoneNumber)
         adaptee.reportIncomingCall(call, callerName: callerName, audioManager: audioManager)
     }
 
-    func reportMissedCall(_ call: SignalCall) {
+    public func reportMissedCall(_ call: SignalCall) {
         let callerName = self.contactsManager.displayName(forPhoneIdentifier: call.remotePhoneNumber)
         adaptee.reportMissedCall(call, callerName: callerName)
     }
 
-    func startOutgoingCall(_ call: SignalCall, thread: TSContactThread) {
+    public func startOutgoingCall(_ call: SignalCall, thread: TSContactThread) {
         adaptee.startOutgoingCall(call)
     }
 
-    func answerCall(_ call: SignalCall) {
+    public func answerCall(_ call: SignalCall) {
         adaptee.answerCall(call)
     }
 
-    func endCall(_ call: SignalCall) {
+    public func endCall(_ call: SignalCall) {
         adaptee.endCall(call)
+    }
+
+    public func showCall(_ call: SignalCall) {
+        adaptee.showCall(call)
     }
 }
 

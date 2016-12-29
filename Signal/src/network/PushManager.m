@@ -282,7 +282,7 @@
     } else if ([identifier isEqualToString:PushManagerActionsAcceptCall]) {
         DDLogInfo(@"%@ received accept call action", self.tag);
 
-        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysCallLocalId];
+        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysLocalCallId];
         if (!localIdString) {
             DDLogError(@"%@ missing localIdString.", self.tag);
             return;
@@ -298,7 +298,7 @@
     } else if ([identifier isEqualToString:PushManagerActionsDeclineCall]) {
         DDLogInfo(@"%@ received decline call action", self.tag);
 
-        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysCallLocalId];
+        NSString *localIdString = notification.userInfo[PushManagerUserInfoKeysLocalCallId];
         if (!localIdString) {
             DDLogError(@"%@ missing localIdString.", self.tag);
             return;
@@ -314,6 +314,13 @@
     } else if ([identifier isEqualToString:PushManagerActionsCallBack]) {
         DDLogInfo(@"%@ received call back action", self.tag);
 
+        NSString *recipientId = notification.userInfo[PushManagerUserInfoKeysCallBackSignalRecipientId];
+        if (!recipientId) {
+            DDLogError(@"%@ missing call back id", self.tag);
+            return;
+        }
+
+        [self.callService handleCallBackWithRecipientId:recipientId];
     } else {
         DDLogDebug(@"%@ Unhandled action with identifier: %@", self.tag, identifier);
 
@@ -505,7 +512,8 @@ NSString *const PushManagerActionsAcceptCall = @"PushManagerActionsAcceptCall";
 NSString *const PushManagerActionsDeclineCall = @"PushManagerActionsDeclineCall";
 NSString *const PushManagerActionsCallBack = @"PushManagerActionsCallBack";
 
-NSString *const PushManagerUserInfoKeysCallLocalId = @"PushManagerUserInfoKeysCallLocalId";
+NSString *const PushManagerUserInfoKeysLocalCallId = @"PushManagerUserInfoKeysLocalCallId";
+NSString *const PushManagerUserInfoKeysCallBackSignalRecipientId = @"PushManagerUserInfoKeysCallBackSignalRecipientId";
 
 - (UIUserNotificationCategory *)signalIncomingCallCategory
 {
