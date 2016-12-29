@@ -268,7 +268,9 @@ fileprivate let timeoutSeconds = 60
 
         let backgroundTask = UIApplication.shared.beginBackgroundTask {
             let timeout = CallError.timeout(description: "background task time ran out before call connected.")
-            self.handleFailedCall(error: timeout)
+            CallService.signalingQueue.async {
+                self.handleFailedCall(error: timeout)
+            }
         }
 
         outgoingCallPromise = firstly {

@@ -17,7 +17,7 @@
 		4509E79A1DD653700025A59F /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4509E7991DD653700025A59F /* WebRTC.framework */; };
 		4509E79C1DD6545B0025A59F /* CallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4509E79B1DD6545B0025A59F /* CallViewController.swift */; };
 		450DF2051E0D74AC003D14BE /* Platform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450DF2041E0D74AC003D14BE /* Platform.swift */; };
-		450DF2091E0DD2C6003D14BE /* UserNotificationsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450DF2081E0DD2C6003D14BE /* UserNotificationsAdapter.swift */; };
+		450DF2091E0DD2C6003D14BE /* UserNotificationsAdaptee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450DF2081E0DD2C6003D14BE /* UserNotificationsAdaptee.swift */; };
 		4516E3FF1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 4516E3FE1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m */; };
 		451764271DE939F300EDB8B9 /* ContactsPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451764261DE939F300EDB8B9 /* ContactsPicker.swift */; };
 		4517642A1DE939FD00EDB8B9 /* ContactCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 451764281DE939FD00EDB8B9 /* ContactCell.xib */; };
@@ -91,6 +91,7 @@
 		45DF5DF31DDB843F00C936C7 /* CompareSafetyNumbersActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45DF5DF11DDB843F00C936C7 /* CompareSafetyNumbersActivity.swift */; };
 		45E1F3A31DEF1DF000852CF1 /* NoSignalContactsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 45E1F3A21DEF1DF000852CF1 /* NoSignalContactsView.xib */; };
 		45E1F3A51DEF20A100852CF1 /* NoSignalContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E1F3A41DEF20A100852CF1 /* NoSignalContactsView.swift */; };
+		45E2E9201E153B3D00457AA0 /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E2E91F1E153B3D00457AA0 /* Strings.swift */; };
 		45EB32CF1D7465C900735B2E /* OWSLinkedDevicesTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EB32CE1D7465C900735B2E /* OWSLinkedDevicesTableViewController.m */; };
 		45F2B1941D9C9F48000D2C69 /* OWSOutgoingMessageCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 45F2B1931D9C9F48000D2C69 /* OWSOutgoingMessageCollectionViewCell.m */; };
 		45F2B1971D9CA207000D2C69 /* OWSIncomingMessageCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 45F2B1951D9CA207000D2C69 /* OWSIncomingMessageCollectionViewCell.xib */; };
@@ -608,7 +609,7 @@
 		4509E7991DD653700025A59F /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = Carthage/Build/iOS/WebRTC.framework; sourceTree = "<group>"; };
 		4509E79B1DD6545B0025A59F /* CallViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallViewController.swift; sourceTree = "<group>"; };
 		450DF2041E0D74AC003D14BE /* Platform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Platform.swift; sourceTree = "<group>"; };
-		450DF2081E0DD2C6003D14BE /* UserNotificationsAdapter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = UserNotificationsAdapter.swift; path = UserInterface/Notifications/UserNotificationsAdapter.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		450DF2081E0DD2C6003D14BE /* UserNotificationsAdaptee.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = UserNotificationsAdaptee.swift; path = UserInterface/Notifications/UserNotificationsAdaptee.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		4516E3FD1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OWS101ExistingUsersBlockOnIdentityChange.h; path = Migrations/OWS101ExistingUsersBlockOnIdentityChange.h; sourceTree = "<group>"; };
 		4516E3FE1DD2193B00DC4206 /* OWS101ExistingUsersBlockOnIdentityChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OWS101ExistingUsersBlockOnIdentityChange.m; path = Migrations/OWS101ExistingUsersBlockOnIdentityChange.m; sourceTree = "<group>"; };
 		451764261DE939F300EDB8B9 /* ContactsPicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsPicker.swift; sourceTree = "<group>"; };
@@ -698,6 +699,7 @@
 		45E282DE1D08E67800ADD4C8 /* gl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = gl; path = translations/gl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		45E282DF1D08E6CC00ADD4C8 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = translations/id.lproj/Localizable.strings; sourceTree = "<group>"; };
 		45E2E91E1E13EE3500457AA0 /* OWSCallNotificationsAdaptee.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OWSCallNotificationsAdaptee.h; path = UserInterface/OWSCallNotificationsAdaptee.h; sourceTree = "<group>"; };
+		45E2E91F1E153B3D00457AA0 /* Strings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Strings.swift; path = UserInterface/Strings.swift; sourceTree = "<group>"; };
 		45EB32CD1D7465C900735B2E /* OWSLinkedDevicesTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSLinkedDevicesTableViewController.h; sourceTree = "<group>"; };
 		45EB32CE1D7465C900735B2E /* OWSLinkedDevicesTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OWSLinkedDevicesTableViewController.m; sourceTree = "<group>"; };
 		45F2B1921D9C9F48000D2C69 /* OWSOutgoingMessageCollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSOutgoingMessageCollectionViewCell.h; sourceTree = "<group>"; };
@@ -1309,6 +1311,7 @@
 				450DF2071E0DD29E003D14BE /* Notifications */,
 				76EB052B18170B33006006FC /* Views */,
 				76EB04FE18170B33006006FC /* View Controllers */,
+				45E2E91F1E153B3D00457AA0 /* Strings.swift */,
 			);
 			name = UserInterface;
 			sourceTree = "<group>";
@@ -1316,7 +1319,7 @@
 		450DF2071E0DD29E003D14BE /* Notifications */ = {
 			isa = PBXGroup;
 			children = (
-				450DF2081E0DD2C6003D14BE /* UserNotificationsAdapter.swift */,
+				450DF2081E0DD2C6003D14BE /* UserNotificationsAdaptee.swift */,
 			);
 			name = Notifications;
 			sourceTree = "<group>";
@@ -3046,7 +3049,7 @@
 				458E38311D6682450094BD24 /* OWSQRCodeScanningViewController.m in Sources */,
 				451A13B11E13DED2000A50FD /* CallNotificationsAdapter.swift in Sources */,
 				76EB062418170B33006006FC /* PriorityQueue.m in Sources */,
-				450DF2091E0DD2C6003D14BE /* UserNotificationsAdapter.swift in Sources */,
+				450DF2091E0DD2C6003D14BE /* UserNotificationsAdaptee.swift in Sources */,
 				B6BADBE71B88D1AC0086A80D /* LockInteractionController.m in Sources */,
 				76EB061A18170B33006006FC /* DiscardingLog.m in Sources */,
 				45CD81F21DC03A22004C9430 /* OWSLogger.m in Sources */,
@@ -3237,6 +3240,7 @@
 				76EB05F818170B33006006FC /* CallConnectUtil_Initiator.m in Sources */,
 				B62F5E101C2980B4000D370C /* NSData+ows_StripToken.m in Sources */,
 				45FBC5CA1DF8575700E9B410 /* StartCallConvertible.swift in Sources */,
+				45E2E9201E153B3D00457AA0 /* Strings.swift in Sources */,
 				45666F7E1D9C0814008FE134 /* OWSDatabaseMigrationRunner.m in Sources */,
 				B63761E319E1F487005735D1 /* AFHTTPSessionManager+SignalMethods.m in Sources */,
 				76EB05CC18170B33006006FC /* ShortAuthenticationStringGenerator.m in Sources */,
