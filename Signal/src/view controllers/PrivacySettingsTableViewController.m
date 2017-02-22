@@ -14,16 +14,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
     PrivacySettingsTableViewControllerSectionIndexScreenSecurity,
+    PrivacySettingsTableViewControllerSectionIndexCalling,
     PrivacySettingsTableViewControllerSectionIndexHistoryLog,
-    PrivacySettingsTableViewControllerSectionIndexBlockOnIdentityChange
+    PrivacySettingsTableViewControllerSectionIndexBlockOnIdentityChange,
+    PrivacySettingsTableViewControllerSectionIndex_Count // meta section to track how many sections
 };
 
 @interface PrivacySettingsTableViewController ()
 
 @property (nonatomic, strong) UITableViewCell *enableScreenSecurityCell;
 @property (nonatomic, strong) UISwitch *enableScreenSecuritySwitch;
+
+@property (nonatomic) UITableViewCell *callsAllowDirectConnectionCell;
+@property (nonatomic) UISwitch *callsAllowDirectConnectionSwitch;
+
 @property (nonatomic, strong) UITableViewCell *blockOnIdentityChangeCell;
 @property (nonatomic, strong) UISwitch *blockOnIdentityChangeSwitch;
+
 @property (nonatomic, strong) UITableViewCell *clearHistoryLogCell;
 
 @end
@@ -59,6 +66,16 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
                                         action:@selector(didToggleScreenSecuritySwitch:)
                               forControlEvents:UIControlEventTouchUpInside];
 
+    // Allow calls to connect directly vs. using TURN exclusively
+    self.callsAllowDirectConnectionCell = [UITableViewCell new];
+    self.callsAllowDirectConnectionCell.textLabel.text = NSLocalizedString(@"SETTINGS_CALLING_ALLOW_DIRECT_CONNECTION_TITLE", @"Table cell label");
+    self.callsAllowDirectConnectionSwitch = [UISwitch new];
+    self.callsAllowDirectConnectionCell.accessoryView = self.callsAllowDirectConnectionSwitch;
+    [self.callsAllowDirectConnectionSwitch setOn:[Environment.preferences isDirectCallConnectionAllowed]];
+    [self.callsAllowDirectConnectionSwitch addTarget:self
+                                              action:@selector(didToggleCallsAllowDirectConnectionSwitch:)
+                                    forControlEvents:UIControlEventTouchUpInside];
+
     // Clear History Log Cell
     self.clearHistoryLogCell                = [[UITableViewCell alloc] init];
     self.clearHistoryLogCell.textLabel.text = NSLocalizedString(@"SETTINGS_CLEAR_HISTORY", @"");
@@ -79,12 +96,14 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 3;
+    return PrivacySettingsTableViewControllerSectionIndex_Count;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     switch (section) {
         case PrivacySettingsTableViewControllerSectionIndexScreenSecurity:
+            return 1;
+        case PrivacySettingsTableViewControllerSectionIndexCalling:
             return 1;
         case PrivacySettingsTableViewControllerSectionIndexHistoryLog:
             return 1;
@@ -100,6 +119,8 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
     switch (section) {
         case PrivacySettingsTableViewControllerSectionIndexScreenSecurity:
             return NSLocalizedString(@"SETTINGS_SCREEN_SECURITY_DETAIL", nil);
+        case PrivacySettingsTableViewControllerSectionIndexCalling:
+            return NSLocalizedString(@"SETTINGS_CALLING_ALLOW_DIRECT_CONNECTION_DESCRIPTION", @"User settings section footer, a detailed explanation");
         case PrivacySettingsTableViewControllerSectionIndexBlockOnIdentityChange:
             return NSLocalizedString(
                 @"SETTINGS_BLOCK_ON_IDENITY_CHANGE_DETAIL", @"User settings section footer, a detailed explanation");
@@ -112,6 +133,8 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
     switch (indexPath.section) {
         case PrivacySettingsTableViewControllerSectionIndexScreenSecurity:
             return self.enableScreenSecurityCell;
+        case PrivacySettingsTableViewControllerSectionIndexCalling:
+            return self.callsAllowDirectConnectionCell;
         case PrivacySettingsTableViewControllerSectionIndexHistoryLog:
             return self.clearHistoryLogCell;
         case PrivacySettingsTableViewControllerSectionIndexBlockOnIdentityChange:
@@ -128,6 +151,8 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
     switch (section) {
         case PrivacySettingsTableViewControllerSectionIndexScreenSecurity:
             return NSLocalizedString(@"SETTINGS_SECURITY_TITLE", @"Section header");
+        case PrivacySettingsTableViewControllerSectionIndexCalling:
+            return NSLocalizedString(@"SETTINGS_SECTION_TITLE_CALLING", @"settings topic header for table section");
         case PrivacySettingsTableViewControllerSectionIndexHistoryLog:
             return NSLocalizedString(@"SETTINGS_HISTORYLOG_TITLE", @"Section header");
         case PrivacySettingsTableViewControllerSectionIndexBlockOnIdentityChange:
@@ -180,6 +205,13 @@ typedef NS_ENUM(NSInteger, PrivacySettingsTableViewControllerSectionIndex) {
     BOOL enabled = self.blockOnIdentityChangeSwitch.isOn;
     DDLogInfo(@"%@ toggled blockOnIdentityChange: %@", self.tag, enabled ? @"ON" : @"OFF");
     [Environment.preferences setShouldBlockOnIdentityChange:enabled];
+}
+
+- (void)didToggleCallsAllowDirectConnectionSwitch:(UISwitch *)sender
+{
+    BOOL enabled = sender.isOn;
+    DDLogInfo(@"%@ toggled callsAllowDirectConnection: %@", self.tag, enabled ? @"ON" : @"OFF");
+    [Environment.preferences setIsDirectCallConnectionAllowed:enabled];
 }
 
 #pragma mark - Log util
