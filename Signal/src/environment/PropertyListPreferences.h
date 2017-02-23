@@ -76,6 +76,9 @@ extern NSString *const PropertyListPreferencesKeyEnableDebugLog;
 - (BOOL)isCallKitEnabled;
 - (void)setIsCallKitEnabled:(BOOL)flag;
 
+- (BOOL)hasSeenBlockingCallKitContactSharingView;
+- (void)setHasSeenBlockingCallKitContactSharingView:(BOOL)flag;
+
 #pragma mark - Block on Identity Change
 
 - (BOOL)shouldBlockOnIdentityChange;

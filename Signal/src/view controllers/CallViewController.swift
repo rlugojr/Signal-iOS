@@ -28,6 +28,7 @@ class CallViewController: UIViewController, CallObserver, CallServiceObserver, R
     var hasConstraints = false
     var blurView: UIVisualEffectView!
     var dateFormatter: DateFormatter?
+    var callKitContactSharingView: UIView
 
     // MARK: Contact Views
 
@@ -160,6 +161,8 @@ class CallViewController: UIViewController, CallObserver, CallServiceObserver, R
         createContactViews()
         createOngoingCallControls()
         createIncomingCallControls()
+        
+        createHiddenCallKitContactSharingView()
     }
 
     func didTouchRootView(sender: UIGestureRecognizer) {
@@ -199,7 +202,37 @@ class CallViewController: UIViewController, CallObserver, CallServiceObserver, R
         contactAvatarView = AvatarImageView()
         self.view.addSubview(contactAvatarView)
     }
+    
+    func createHiddenCallKitContactSharingView() {
+        callKitContactSharingView = UIView()
+        let header = UILabel()
+        header.text = NSLocalizedString("CALL_SCREEN_CALLKIT_SHARING_MODAL_TITLE", comment: "Full screen title")
+        
+        let body = UILabel()
+        body.text = NSLocalizedString("CALL_SCREEN_CALLKIT_SHARING_MODAL_DESCRIPTION", comment: "Short paragraph")
+        
+        // takes you to settings
+        let acceptButton = UIButton()
+        acceptButton.titleLabel.text = NSLocalizedString("CALL_SCREEN_CALLKIT_SHARING_MODAL_ACCEPT_BUTTON", comment: "button label")
+        acceptButton.addTarget(self, action: #selector(didTapAcceptCallKitContactSharing), for: .touchUpInside)
+        
+        // dismisses
+        let declineButton = UIButton()
+        declineButton.titleLabel.text = NSLocalizedString("CALL_SCREEN_CALLKIT_SHARING_MODAL_DECLINE_BUTTON", comment: "button label")
+        declineButton.addTarget(self, action: #selector(didTapDeclineCallKitContactSharing), for: .touchUpInside)
+    }
 
+    func didTapAcceptCallKitContactSharing() {
+        Logger.info("\(TAG) in \(#function)")
+        //TODO set preference.
+        Environment.getCurrent().preferences.setSharingContactsWithCallKitIsAllowed(true)
+    }
+    
+    func didTapDeclineCallKitContactSharing() {
+        dismiss(animated: true)
+    }
+    
+    
     func buttonSize() -> CGFloat {
         return ScaleFromIPhone5To7Plus(84, 108)
     }
@@ -550,6 +583,23 @@ class CallViewController: UIViewController, CallObserver, CallServiceObserver, R
                           localizedTextForCallState(callState))
         self.callStatusLabel.text = text
     }
+    
+    func showBlockingCallKitContactSharingView() {
+        Logger.debug("\(TAG) in \(#function)")
+        UIView.animate(withDuration: 0.2) { 
+            self.callKitContactSharingView.alpha = 1
+        }
+    }
+    
+    func showNonBlockingCallKitContactSharingView() {
+        Logger.debug("\(TAG) in \(#function)")
+        
+        showBlockingCallKitContactSharingView()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            Logger.debug("\(TAG) in \(#function) dismissing")
+            self.dismiss(animated: true)
+        }
+    }
 
     func updateCallUI(callState: CallState) {
         assert(Thread.isMainThread)
@@ -592,15 +642,44 @@ class CallViewController: UIViewController, CallObserver, CallServiceObserver, R
         }
 
         // Dismiss Handling
+        
+        let supportsCallKit: Bool
+        if #available(iOS 10.0, *) {
+            supportsCallKit = true
+        } else {
+            supportsCallKit = false
+        }
+        let enabledCallKit = Environment.getCurrent().preferences.isCallKitEnabled()
+        let seenBefore = Environment.getCurrent().preferences.hasSeenBlockingCallKitContactSharingView()
+        let callKitContactSharingEnabled = Environment.getCurrent().preferences.isSharingContactsWithCallKitEnabled()
+
         switch callState {
         case .remoteHangup, .remoteBusy, .localFailure:
-            Logger.debug("\(TAG) dismissing after delay because new state is \(callState)")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                self.dismiss(animated: true)
+            if supportsCallKit && enabledCallKit && !callKitContactSharingEnabled {
+                if seenBefore {
+                    showNonBlockingCallKitContactSharingView()
+                } else {
+                    Environment.getCurrent().preferences.setHasSeenBlockingCallKitContactSharingView(true)
+                    showBlockingCallKitContactSharingView()
+                }
+            } else {
+                Logger.debug("\(TAG) dismissing after delay because new state is \(callState)")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    self.dismiss(animated: true)
+                }
             }
         case .localHangup:
-            Logger.debug("\(TAG) dismissing immediately from local hangup")
-            self.dismiss(animated: true)
+            if supportsCallKit && enabledCallKit && !callKitContactSharingEnabled {
+                if seenBefore {
+                    showNonBlockingCallKitContactSharingView()
+                } else {
+                    Environment.getCurrent().preferences.setHasSeenBlockingCallKitContactSharingView(true)
+                    showBlockingCallKitContactSharingView()
+                }
+            } else {
+                Logger.debug("\(TAG) dismissing immediately from local hangup")
+                self.dismiss(animated: true)
+            }
 
         default: break
         }

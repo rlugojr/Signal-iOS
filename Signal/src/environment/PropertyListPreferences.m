@@ -25,6 +25,7 @@ NSString *const PropertyListPreferencesKeyLastRecordedPushToken = @"LastRecorded
 NSString *const PropertyListPreferencesKeyLastRecordedVoipToken = @"LastRecordedVoipToken";
 NSString *const PropertyListPreferencesKeyWebRTCEnabled = @"WebRTCEnabled";
 NSString *const PropertyListPreferencesKeyCallKitEnabled = @"CallKitEnabled";
+NSString *const PropertyListPreferencesHasSeenBlockingCallKitContactSharingView = @"HasSeenBlockingCallKitContactSharingView";
 
 @implementation PropertyListPreferences
 
@@ -196,6 +197,17 @@ NSString *const PropertyListPreferencesKeyCallKitEnabled = @"CallKitEnabled";
 - (void)setIsCallKitEnabled:(BOOL)flag
 {
     [self setValueForKey:PropertyListPreferencesKeyCallKitEnabled toValue:@(flag)];
+}
+
+- (BOOL)hasSeenBlockingCallKitContactSharingView
+{
+    NSNumber *preference = [self tryGetValueForKey:PropertyListPreferencesHasSeenBlockingCallKitContactSharingView];
+    return preference ? [preference boolValue] : NO;
+}
+
+- (void)setHasSeenBlockingCallKitContactSharingView:(BOOL)flag
+{
+    [self setValueForKey:PropertyListPreferencesHasSeenBlockingCallKitContactSharingView toValue:@(flag)];
 }
 
 #pragma mark Notification Preferences
